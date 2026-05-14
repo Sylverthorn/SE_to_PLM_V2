@@ -21,9 +21,9 @@ class BatchExportUseCase:
         self._order_counter = 1
 
     def _get_attachment_suffix(self, plm_class: PlmClass) -> str:
-        if plm_class == PlmClass.SUB_ASSY: return " (ASM)"
-        if plm_class == PlmClass.PART or plm_class == PlmClass.PART_PURCH: return " (PRT)"
-        if plm_class == PlmClass.DRAWING: return " (DRW)"
+        if plm_class == PlmClass.SUB_ASSY: return "(ASM)"
+        if plm_class == PlmClass.PART or plm_class == PlmClass.PART_PURCH: return "(PRT)"
+        if plm_class == PlmClass.DRAWING: return "(DRW)"
         return ""
 
     def _determine_plm_class(self, file_path: str) -> PlmClass:
@@ -41,7 +41,7 @@ class BatchExportUseCase:
         idx1, idx2 = revision_service.calculate_previous_indices(metadata.version)
         
         suffix = self._get_attachment_suffix(cad_file.plm_class)
-        attachments = cad_file.full_path_str + suffix
+        attachments = (cad_file.full_path_str + suffix).replace(" ", "_")
         
         row = ExportRow(
             level=level,
@@ -171,7 +171,7 @@ class BatchExportUseCase:
                     matiere=meta_piece.matiere,
                     densite=meta_piece.densite,
                     dia_se=meta_piece.dia_se,
-                    attachments=dft_cad.full_path_str + " (DRW)"
+                    attachments=(dft_cad.full_path_str + "(DRW)").replace(" ", "_")
                 )
                 self._order_counter += 1
                 export_rows.append(dft_row)

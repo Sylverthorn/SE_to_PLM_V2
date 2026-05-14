@@ -24,9 +24,9 @@ class GeneratePLMExportUseCase:
         self._order_counter = 1
 
     def _get_attachment_suffix(self, plm_class: PlmClass) -> str:
-        if plm_class == PlmClass.SUB_ASSY: return " (ASM)"
-        if plm_class == PlmClass.PART or plm_class == PlmClass.PART_PURCH: return " (PRT)"
-        if plm_class == PlmClass.DRAWING: return " (DRW)"
+        if plm_class == PlmClass.SUB_ASSY: return "(ASM)"
+        if plm_class == PlmClass.PART or plm_class == PlmClass.PART_PURCH: return "(PRT)"
+        if plm_class == PlmClass.DRAWING: return "(DRW)"
         return ""
 
     def _map_to_export_row(self, node: AssemblyNode) -> ExportRow:
@@ -34,7 +34,7 @@ class GeneratePLMExportUseCase:
         idx1, idx2 = revision_service.calculate_previous_indices(node.metadata.version)
         
         suffix = self._get_attachment_suffix(node.cad_file.plm_class)
-        attachments = node.cad_file.full_path_str + suffix
+        attachments = (node.cad_file.full_path_str + suffix).replace(" ", "_")
         
         row = ExportRow(
             level=node.level,
@@ -185,7 +185,7 @@ class GeneratePLMExportUseCase:
             matiere=source_node.metadata.matiere, # DFTs don't have material
             densite=source_node.metadata.densite,
             dia_se=source_node.metadata.dia_se,
-            attachments=dft_cad.full_path_str + " (DRW)"
+            attachments=(dft_cad.full_path_str + "(DRW)").replace(" ", "_")
         )
         self._order_counter += 1
         rows.append(dft_row)
