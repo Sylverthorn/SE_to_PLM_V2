@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QLineEdit, QPushButton, QComboBox, QProgressBar, QTextEdit, 
     QFileDialog, QMessageBox, QGroupBox, QApplication, QTabWidget,
-    QCheckBox, QRadioButton, QButtonGroup
+    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCursor
@@ -23,7 +23,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("SE_to_PLM — Export Industriel PLM")
-        self.setMinimumSize(850, 750)
+        self.setMinimumSize(900, 800)
+        self.resize(1000, 850)
         self._thread = None
         
         self._setup_ui()
@@ -34,30 +35,37 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(10)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setContentsMargins(15, 15, 15, 15)
 
-        # --- Tab Widget ---
-        self.tabs = QTabWidget()
-        main_layout.addWidget(self.tabs)
-
-        # 1. Tab: Assembly
-        self.tab_assembly = QWidget()
-        self._setup_assembly_tab()
-        self.tabs.addTab(self.tab_assembly, "Export Assemblage")
-
-        # 2. Tab: Batch (PAR/PSM)
-        self.tab_batch = QWidget()
-        self._setup_batch_tab()
-        self.tabs.addTab(self.tab_batch, "Export par Lot")
-
-        # 3. Tab: Multi-ASM (Unified)
-        self.tab_multi_asm = QWidget()
-        self._setup_multi_asm_tab()
-        self.tabs.addTab(self.tab_multi_asm, "Multi-ASM")
-
-        # --- Common Sections (Bottom) ---
+        # --- Main Splitter (Top content vs Console) ---
+        self.splitter = QSplitter(Qt.Vertical)
         
-        # Output Group
+        # --- Top Container (Tabs + Output + Action) ---
+        top_container = QWidget()
+        top_layout = QVBoxLayout(top_container)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(10)
+
+        # 1. Tab Widget
+        self.tabs = QTabWidget()
+        top_layout.addWidget(self.tabs, stretch=1)
+
+        # 1.1. Tab: Assembly
+        self.tab_assembly = QWidget()
+        self._setup_assembly_tab(self.tab_assembly)
+        self.tabs.addTab(self._wrap_in_scroll_area(self.tab_assembly), "Export Assemblage")
+
+        # 1.2. Tab: Batch (PAR/PSM)
+        self.tab_batch = QWidget()
+        self._setup_batch_tab(self.tab_batch)
+        self.tabs.addTab(self._wrap_in_scroll_area(self.tab_batch), "Export par Lot")
+
+        # 1.3. Tab: Multi-ASM (Unified)
+        self.tab_multi_asm = QWidget()
+        self._setup_multi_asm_tab(self.tab_multi_asm)
+        self.tabs.addTab(self._wrap_in_scroll_area(self.tab_multi_asm), "Multi-ASM")
+
+        # 2. Output Group
         group_output = QGroupBox("Destination de l'export")
         out_layout = QVBoxLayout(group_output)
         
@@ -71,33 +79,56 @@ class MainWindow(QMainWindow):
         
         self.dest_label = QLabel(f"Dossier : {DEFAULT_EXPORT_DIR}")
         out_layout.addWidget(self.dest_label)
-        main_layout.addWidget(group_output)
+        top_layout.addWidget(group_output)
 
-        # Action Button
+        # 3. Action & Progress
+        action_layout = QVBoxLayout()
         self.btn_extraire = QPushButton("LANCER L'EXTRACTION")
         self.btn_extraire.setObjectName("btn_extraire")
         self.btn_extraire.clicked.connect(self._start_extraction)
-        main_layout.addWidget(self.btn_extraire)
+        action_layout.addWidget(self.btn_extraire)
 
-        # Progress
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
-        main_layout.addWidget(self.progress_bar)
+        action_layout.addWidget(self.progress_bar)
         
         self.status_label = QLabel("Prêt")
-        main_layout.addWidget(self.status_label)
+        action_layout.addWidget(self.status_label)
+        top_layout.addLayout(action_layout)
 
-        # Console
-        main_layout.addWidget(QLabel("Journal d'exécution :"))
+        self.splitter.addWidget(top_container)
+
+        # --- Bottom Container (Console) ---
+        bottom_container = QWidget()
+        bottom_layout = QVBoxLayout(bottom_container)
+        bottom_layout.setContentsMargins(0, 5, 0, 0)
+        
+        bottom_layout.addWidget(QLabel("Journal d'exécution :"))
         self.console = QTextEdit()
         self.console.setObjectName("console")
         self.console.setReadOnly(True)
-        main_layout.addWidget(self.console)
+        bottom_layout.addWidget(self.console)
+        
+        self.splitter.addWidget(bottom_container)
+        
+        # Splitter sizing: give more space to top content by default
+        self.splitter.setStretchFactor(0, 3)
+        self.splitter.setStretchFactor(1, 1)
+        
+        main_layout.addWidget(self.splitter)
         
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
-    def _setup_assembly_tab(self):
-        layout = QVBoxLayout(self.tab_assembly)
+    def _wrap_in_scroll_area(self, widget):
+        """Enveloppe un widget dans une zone de défilement pour éviter l'écrasement."""
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setWidget(widget)
+        return scroll
+
+    def _setup_assembly_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
         layout.setSpacing(15)
 
         group_selection = QGroupBox("Sélection du projet")
@@ -113,28 +144,14 @@ class MainWindow(QMainWindow):
         sel_layout.addLayout(file_row)
         layout.addWidget(group_selection)
 
-        group_options = QGroupBox("Options d'indexation des plans")
-        opt_layout = QVBoxLayout(group_options)
-        mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Mode de recherche des .dft :"))
-        self.mode_combo = QComboBox()
-        self.mode_combo.addItems(["Les deux (Recommandé)", "Arborescence projet uniquement", "Dossier spécifique uniquement"])
-        self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
-        mode_row.addWidget(self.mode_combo)
-        opt_layout.addLayout(mode_row)
-        dft_row = QHBoxLayout()
-        dft_row.addWidget(QLabel("Dossier plans spécifique :"))
-        self.dft_edit = QLineEdit()
-        dft_row.addWidget(self.dft_edit)
-        self.btn_dft_browse = QPushButton("Parcourir...")
-        self.btn_dft_browse.clicked.connect(self._browse_dft_folder)
-        dft_row.addWidget(self.btn_dft_browse)
-        opt_layout.addLayout(dft_row)
-        layout.addWidget(group_options)
+        # Options d'indexation (Partagé par convention mais widgets distincts par onglet)
+        self.asm_dft_group, self.asm_mode_combo, self.asm_dft_edit, self.asm_btn_dft_browse = self._create_dft_indexing_group()
+        layout.addWidget(self.asm_dft_group)
+        
         layout.addStretch()
 
-    def _setup_batch_tab(self):
-        layout = QVBoxLayout(self.tab_batch)
+    def _setup_batch_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
         layout.setSpacing(15)
         group_batch = QGroupBox("Sélection du dossier")
         batch_layout = QVBoxLayout(group_batch)
@@ -150,10 +167,15 @@ class MainWindow(QMainWindow):
         self.cb_recursive = QCheckBox("Inclure les sous-dossiers")
         batch_layout.addWidget(self.cb_recursive)
         layout.addWidget(group_batch)
+
+        # Ajout de la logique DFT pour le lot
+        self.batch_dft_group, self.batch_mode_combo, self.batch_dft_edit, self.batch_btn_dft_browse = self._create_dft_indexing_group()
+        layout.addWidget(self.batch_dft_group)
+
         layout.addStretch()
 
-    def _setup_multi_asm_tab(self):
-        layout = QVBoxLayout(self.tab_multi_asm)
+    def _setup_multi_asm_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
         layout.setSpacing(15)
 
         # 1. Source Type
@@ -191,7 +213,49 @@ class MainWindow(QMainWindow):
         self.radio_out_multiple.toggled.connect(self._update_multi_asm_labels)
         self.radio_out_single.toggled.connect(self._update_multi_asm_labels)
         
+        # Ajout de la logique DFT pour le Multi-ASM
+        self.multi_dft_group, self.multi_mode_combo, self.multi_dft_edit, self.multi_btn_dft_browse = self._create_dft_indexing_group()
+        layout.addWidget(self.multi_dft_group)
+
         layout.addStretch()
+
+    def _create_dft_indexing_group(self):
+        """Crée un groupe d'options pour l'indexation des plans (réutilisable)."""
+        group = QGroupBox("Options d'indexation des plans")
+        layout = QVBoxLayout(group)
+        
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel("Mode de recherche des .dft :"))
+        mode_combo = QComboBox()
+        mode_combo.addItems(["Les deux (Recommandé)", "Arborescence projet uniquement", "Dossier spécifique uniquement"])
+        mode_row.addWidget(mode_combo)
+        layout.addLayout(mode_row)
+        
+        dft_row = QHBoxLayout()
+        dft_row.addWidget(QLabel("Dossier plans spécifique :"))
+        dft_edit = QLineEdit()
+        dft_row.addWidget(dft_edit)
+        btn_browse = QPushButton("Parcourir...")
+        dft_row.addWidget(btn_browse)
+        layout.addLayout(dft_row)
+        
+        # Connexions locales
+        mode_combo.currentIndexChanged.connect(lambda idx: self._on_mode_changed_local(idx, dft_edit, btn_browse))
+        btn_browse.clicked.connect(lambda: self._browse_dft_folder_local(dft_edit))
+        
+        # Etat initial
+        self._on_mode_changed_local(mode_combo.currentIndex(), dft_edit, btn_browse)
+        
+        return group, mode_combo, dft_edit, btn_browse
+
+    def _on_mode_changed_local(self, index, dft_edit, btn_browse):
+        enabled = (index != 1)
+        dft_edit.setEnabled(enabled)
+        btn_browse.setEnabled(enabled)
+
+    def _browse_dft_folder_local(self, dft_edit):
+        folder = QFileDialog.getExistingDirectory(self, "Dossier plans")
+        if folder: dft_edit.setText(folder)
 
     def _load_style(self):
         style_path = Path(__file__).parent.parent / "styles" / "style.qss"
@@ -235,15 +299,6 @@ class MainWindow(QMainWindow):
             self.output_label.setText("Nom du dossier de sortie :")
             self.output_name_edit.setText(f"Export_Multi_ASM_Files_{name}_{timestamp}")
 
-    def _browse_dft_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Dossier plans")
-        if folder: self.dft_edit.setText(folder)
-
-    def _on_mode_changed(self, index):
-        enabled = (index != 1)
-        self.dft_edit.setEnabled(enabled)
-        self.btn_dft_browse.setEnabled(enabled)
-
     def _on_tab_changed(self, index):
         if index == 2: # Multi-ASM
             self._update_multi_asm_labels()
@@ -263,25 +318,32 @@ class MainWindow(QMainWindow):
         is_folder_source = False
         output_mode = "single"
         
+        # Récupération des widgets selon l'onglet
         if idx == 0:
             input_path = self.input_edit.text()
             mode = "assembly"
+            mode_combo = self.asm_mode_combo
+            dft_edit = self.asm_dft_edit
         elif idx == 1:
             input_path = self.batch_dir_edit.text()
             mode = "batch"
             recursive = self.cb_recursive.isChecked()
+            mode_combo = self.batch_mode_combo
+            dft_edit = self.batch_dft_edit
         else:
             input_path = self.multi_path_edit.text()
             mode = "multi_asm"
             is_folder_source = self.radio_multi_folder.isChecked()
             output_mode = "multiple" if self.radio_out_multiple.isChecked() else "single"
+            mode_combo = self.multi_mode_combo
+            dft_edit = self.multi_dft_edit
 
         if not input_path or not os.path.exists(input_path):
             QMessageBox.warning(self, "Erreur", "Vérifiez votre sélection.")
             return
 
         output_name = self.output_name_edit.text() or "Export_PLM"
-        search_mode = [SEARCH_MODE_BOTH, SEARCH_MODE_ARBO, SEARCH_MODE_SPECIFIC][self.mode_combo.currentIndex()]
+        search_mode = [SEARCH_MODE_BOTH, SEARCH_MODE_ARBO, SEARCH_MODE_SPECIFIC][mode_combo.currentIndex()]
         
         self.btn_extraire.setEnabled(False)
         self.btn_extraire.setText("EXTRACTION EN COURS...")
@@ -289,7 +351,7 @@ class MainWindow(QMainWindow):
         
         self._thread = ExtractionThread(
             input_path=input_path, output_dir=str(DEFAULT_EXPORT_DIR), output_name=output_name,
-            dft_folder=self.dft_edit.text(), search_mode=search_mode, mode=mode,
+            dft_folder=dft_edit.text(), search_mode=search_mode, mode=mode,
             recursive=recursive, is_folder_source=is_folder_source, output_mode=output_mode
         )
         self._thread.progress_signal.connect(self._update_progress)

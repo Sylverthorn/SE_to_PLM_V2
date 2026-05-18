@@ -43,6 +43,11 @@ class BatchExportUseCase:
         suffix = self._get_attachment_suffix(cad_file.plm_class)
         attachments = (cad_file.full_path_str + suffix).replace(" ", "_")
         
+        # RÈGLE : Version par défaut à "-" si vide
+        version = metadata.version
+        if not version.strip():
+            version = "-"
+            
         row = ExportRow(
             level=level,
             relationship=relationship,
@@ -52,7 +57,7 @@ class BatchExportUseCase:
             special_cad=cad_file.name_without_extension,
             plm_class=cad_file.plm_class.value,
             ref_utilisat=cad_file.name_without_extension,
-            version=metadata.version,
+            version=version,
             indice_1=idx1,
             indice_2=idx2,
             revision=metadata.revision,
@@ -75,6 +80,8 @@ class BatchExportUseCase:
         output_dir: str,
         output_name: str,
         recursive: bool = False,
+        dft_folder: Optional[str] = None,
+        search_mode: str = "les_deux",
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
         is_cancelled: Optional[Callable[[], bool]] = None
     ):
@@ -107,13 +114,12 @@ class BatchExportUseCase:
 
         if is_cancelled and is_cancelled(): return
 
-        # 2. Index Drawings in the same directory (and maybe project root)
+        # 2. Index Drawings
         if progress_callback: progress_callback(15, 100, "Indexation des plans...")
-        # For batch, we scan the selected directory as the main source of plans
         index_plans = dft_indexer.index_drawings(
-            asm_path=target_files[0], # Just to give a hint to the indexer
-            specific_folder=input_dir,
-            mode="dossier_specifique",
+            seed_paths=target_files, 
+            specific_folder=dft_folder,
+            mode=search_mode,
             callback_progress=lambda s, f, t: progress_callback(min(15 + (s // 100), 30), 100, f"Recherche... {f} plans trouvés") if progress_callback else None
         )
 
@@ -149,6 +155,14 @@ class BatchExportUseCase:
                 auteur = dft_meta.auteur if dft_meta.auteur.strip() else meta_piece.auteur
                 date_crea = dft_meta.date_creation if dft_meta.date_creation.strip() else meta_piece.date_creation
                 
+                # RÈGLE : Version par défaut à "-" si vide
+                version = dft_meta.version
+                if not version.strip() or version == "-":
+                    version = meta_piece.version
+                
+                if not version.strip():
+                    version = "-"
+                    
                 # Level 0: DFT
                 dft_row = ExportRow(
                     level=0,
@@ -159,7 +173,7 @@ class BatchExportUseCase:
                     special_cad=dft_cad.name_without_extension,
                     plm_class=PlmClass.DRAWING.value,
                     ref_utilisat=dft_cad.name_without_extension,
-                    version=dft_meta.version if dft_meta.version.strip() != "-" else meta_piece.version,
+                    version=version,
                     indice_1="-",
                     indice_2="-",
                     revision=dft_meta.revision,

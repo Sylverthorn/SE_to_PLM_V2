@@ -36,6 +36,11 @@ class GeneratePLMExportUseCase:
         suffix = self._get_attachment_suffix(node.cad_file.plm_class)
         attachments = (node.cad_file.full_path_str + suffix).replace(" ", "_")
         
+        # RÈGLE : Version par défaut à "-" si vide
+        version = node.metadata.version
+        if not version.strip():
+            version = "-"
+            
         row = ExportRow(
             level=node.level,
             relationship=node.relationship.value,
@@ -45,7 +50,7 @@ class GeneratePLMExportUseCase:
             special_cad=node.cad_file.name_without_extension,
             plm_class=node.cad_file.plm_class.value,
             ref_utilisat=node.cad_file.name_without_extension,
-            version=node.metadata.version,
+            version=version,
             indice_1=idx1,
             indice_2=idx2,
             revision=node.metadata.revision,
@@ -79,7 +84,7 @@ class GeneratePLMExportUseCase:
 
         # 1. Index Drawings
         index_plans = dft_indexer.index_drawings(
-            input_file, 
+            seed_paths=[input_file], 
             specific_folder=dft_folder, 
             mode=search_mode,
             callback_progress=lambda s, f, t: progress_callback(min(5 + (s // 100), 20), 100, f"Recherche... {f} plans trouvés") if progress_callback else None
@@ -164,6 +169,14 @@ class GeneratePLMExportUseCase:
         auteur = dft_meta.auteur if dft_meta.auteur.strip() else source_node.metadata.auteur
         date_crea = dft_meta.date_creation if dft_meta.date_creation.strip() else source_node.metadata.date_creation
         
+        # RÈGLE : Version par défaut à "-" si vide
+        version = dft_meta.version
+        if not version.strip() or version == "-":
+            version = source_node.metadata.version
+            
+        if not version.strip():
+            version = "-"
+            
         dft_row = ExportRow(
             level=0,
             relationship="",
@@ -173,7 +186,7 @@ class GeneratePLMExportUseCase:
             special_cad=dft_cad.name_without_extension,
             plm_class=PlmClass.DRAWING.value,
             ref_utilisat=dft_cad.name_without_extension,
-            version=dft_meta.version if dft_meta.version.strip() != "-" else source_node.metadata.version,
+            version=version,
             indice_1="-", 
             indice_2="-",
             revision=dft_meta.revision,

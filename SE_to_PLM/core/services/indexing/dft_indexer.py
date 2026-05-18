@@ -14,7 +14,7 @@ class DFTIndexer:
 
     def index_drawings(
         self,
-        asm_path: str,
+        seed_paths: List[str],
         specific_folder: Optional[str] = None,
         mode: str = SEARCH_MODE_BOTH,
         max_depth: int = 3,
@@ -28,13 +28,16 @@ class DFTIndexer:
 
         # 1. Determine scan roots based on mode
         if mode in [SEARCH_MODE_ARBO, SEARCH_MODE_BOTH]:
-            root_arbo = path_resolver.get_project_root(asm_path, levels_up=3)
-            roots_to_scan.append(root_arbo)
-            logger.info(f"Scan racine projet : {root_arbo}")
+            for path in seed_paths:
+                root_arbo = path_resolver.get_project_root(path, levels_up=3)
+                if root_arbo and root_arbo not in roots_to_scan:
+                    roots_to_scan.append(root_arbo)
+                    logger.info(f"Scan racine projet détectée : {root_arbo}")
 
         if mode in [SEARCH_MODE_SPECIFIC, SEARCH_MODE_BOTH] and specific_folder:
-            roots_to_scan.append(specific_folder)
-            logger.info(f"Scan dossier spécifique : {specific_folder}")
+            if specific_folder not in roots_to_scan:
+                roots_to_scan.append(specific_folder)
+                logger.info(f"Scan dossier spécifique : {specific_folder}")
 
         # Remove duplicates and ensure directories exist
         roots_to_scan = list(set([r for r in roots_to_scan if r and os.path.isdir(r)]))

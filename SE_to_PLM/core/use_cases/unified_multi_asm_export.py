@@ -36,9 +36,13 @@ class UnifiedMultiASMExportUseCase:
         idx1, idx2 = revision_service.calculate_previous_indices(node.metadata.version)
         
         suffix = self._get_attachment_suffix(node.cad_file.plm_class)
-        # SUPPRESSION DES ESPACES : Le PLM ne supporte pas les espaces dans les chemins
         attachments = (node.cad_file.full_path_str + suffix).replace(" ", "_")
         
+        # RÈGLE : Version par défaut à "-" si vide
+        version = node.metadata.version
+        if not version.strip():
+            version = "-"
+            
         row = ExportRow(
             level=level,
             relationship=relationship,
@@ -48,7 +52,7 @@ class UnifiedMultiASMExportUseCase:
             special_cad=node.cad_file.name_without_extension,
             plm_class=node.cad_file.plm_class.value,
             ref_utilisat=node.cad_file.name_without_extension,
-            version=node.metadata.version,
+            version=version,
             indice_1=idx1,
             indice_2=idx2,
             revision=node.metadata.revision,
@@ -96,16 +100,14 @@ class UnifiedMultiASMExportUseCase:
             logger.warning("Aucun fichier .asm trouvé.")
             return
 
-        # 2. Index Drawings (if single file mode)
-        index_plans = {}
-        if output_mode == "single":
-            if progress_callback: progress_callback(5, 100, "Recherche des plans...")
-            index_plans = dft_indexer.index_drawings(
-                head_asms[0], 
-                specific_folder=dft_folder or (input_path if is_folder_source else None), 
-                mode=search_mode,
-                callback_progress=lambda s, f, t: progress_callback(min(5 + (s // 100), 15), 100, f"Recherche... {f} plans trouvés") if progress_callback else None
-            )
+        # 2. Index Drawings (Important: always index for Multi-ASM)
+        if progress_callback: progress_callback(5, 100, "Recherche des plans...")
+        index_plans = dft_indexer.index_drawings(
+            seed_paths=head_asms, 
+            specific_folder=dft_folder or (input_path if is_folder_source else None), 
+            mode=search_mode,
+            callback_progress=lambda s, f, t: progress_callback(min(5 + (s // 100), 15), 100, f"Recherche... {f} plans trouvés") if progress_callback else None
+        )
 
         if is_cancelled and is_cancelled(): return
 
@@ -129,7 +131,6 @@ class UnifiedMultiASMExportUseCase:
             
             try:
                 doc = app.Documents.Open(head_path)
-                # Force is_root=True or ensure exploration is deep
                 tree = assembly_service.explore_assembly(doc)
                 
                 def collect_data(node: AssemblyNode):
@@ -165,9 +166,19 @@ class UnifiedMultiASMExportUseCase:
                 
                 rows: List[ExportRow] = []
                 self._order_counter = 1
+                
+                # Assembly Rows
                 rows.append(self._map_to_export_row(asm_node, level=0))
                 for child in asm_node.children:
                     rows.append(self._map_to_export_row(child, level=1, relationship="ComposedOf"))
+                
+                # Add Drawings for THIS assembly and its children
+                processed_plans = set()
+                # 1. Drawing for the assembly itself
+                self._check_and_add_drawing(asm_node, index_plans, processed_plans, rows)
+                # 2. Drawings for children
+                for child in asm_node.children:
+                    self._check_and_add_drawing(child, index_plans, processed_plans, rows)
                 
                 excel_path = os.path.join(full_export_path, f"{asm_node.cad_file.name_without_extension}.xlsx")
                 excel_exporter.create_export(rows, excel_path)
@@ -195,13 +206,7 @@ class UnifiedMultiASMExportUseCase:
             processed_plans = set()
             for path_lower, node in unique_items_for_dft.items():
                 if is_cancelled and is_cancelled(): break
-                
-                name_lower = node.cad_file.name_without_extension.lower()
-                if name_lower in index_plans:
-                    dft_path = index_plans[name_lower]
-                    if dft_path not in processed_plans:
-                        processed_plans.add(dft_path)
-                        self._add_drawing_rows(dft_path, node, export_rows)
+                self._check_and_add_drawing(node, index_plans, processed_plans, export_rows)
 
             if progress_callback: progress_callback(95, 100, "Sauvegarde du fichier...")
             full_output_path = os.path.join(output_dir, output_name)
@@ -212,6 +217,14 @@ class UnifiedMultiASMExportUseCase:
 
         if progress_callback: progress_callback(100, 100, "Extraction terminée !")
 
+    def _check_and_add_drawing(self, node: AssemblyNode, index_plans: Dict[str, str], processed_plans: Set[str], rows: List[ExportRow]):
+        name_lower = node.cad_file.name_without_extension.lower()
+        if name_lower in index_plans:
+            dft_path = index_plans[name_lower]
+            if dft_path not in processed_plans:
+                processed_plans.add(dft_path)
+                self._add_drawing_rows(dft_path, node, rows)
+
     def _add_drawing_rows(self, dft_path: str, source_node: AssemblyNode, rows: List[ExportRow]):
         """Standard 2-row block for a drawing."""
         dft_cad = CadFile(file_path=Path(dft_path), plm_class=PlmClass.DRAWING)
@@ -220,12 +233,20 @@ class UnifiedMultiASMExportUseCase:
         auteur = dft_meta.auteur if dft_meta.auteur.strip() else source_node.metadata.auteur
         date_crea = dft_meta.date_creation if dft_meta.date_creation.strip() else source_node.metadata.date_creation
         
+        # RÈGLE : Version par défaut à "-" si vide
+        version = dft_meta.version
+        if not version.strip() or version == "-":
+            version = source_node.metadata.version
+            
+        if not version.strip():
+            version = "-"
+            
         dft_row = ExportRow(
             level=0, relationship="", order=self._order_counter, quantity=1, repere="",
             special_cad=dft_cad.name_without_extension,
             plm_class=PlmClass.DRAWING.value,
             ref_utilisat=dft_cad.name_without_extension,
-            version=dft_meta.version if dft_meta.version.strip() != "-" else source_node.metadata.version,
+            version=version,
             indice_1="-", indice_2="-", revision=dft_meta.revision,
             designation=source_node.metadata.designation,
             cus_createur=auteur, cus_date_crea=date_crea,
@@ -238,7 +259,8 @@ class UnifiedMultiASMExportUseCase:
         rows.append(dft_row)
         
         # Piece Row
-        rows.append(self._map_to_export_row(source_node, level=1, relationship=RelationshipType.DRAWING.value))
+        piece_row = self._map_to_export_row(source_node, level=1, relationship=RelationshipType.DRAWING.value)
+        rows.append(piece_row)
 
 # Global instance
 unified_multi_asm_export_use_case = UnifiedMultiASMExportUseCase()

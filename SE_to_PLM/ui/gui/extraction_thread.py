@@ -69,6 +69,8 @@ class ExtractionThread(QThread):
                     output_dir=self.output_dir,
                     output_name=self.output_name,
                     recursive=self.recursive,
+                    dft_folder=self.dft_folder,
+                    search_mode=self.search_mode,
                     progress_callback=self.progress_signal.emit,
                     is_cancelled=self._check_cancelled
                 )
