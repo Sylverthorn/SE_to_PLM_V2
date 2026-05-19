@@ -41,7 +41,7 @@ class BatchExportUseCase:
         idx1, idx2 = revision_service.calculate_previous_indices(metadata.version)
         
         suffix = self._get_attachment_suffix(cad_file.plm_class)
-        attachments = (cad_file.full_path_str + suffix).replace(" ", "_")
+        attachments = (cad_file.full_path_str + suffix)
         
         # RÈGLE : Version par défaut à "-" si vide
         version = metadata.version
@@ -185,7 +185,7 @@ class BatchExportUseCase:
                     matiere=meta_piece.matiere,
                     densite=meta_piece.densite,
                     dia_se=meta_piece.dia_se,
-                    attachments=(dft_cad.full_path_str + "(DRW)").replace(" ", "_")
+                    attachments=(dft_cad.full_path_str + "(DRW)")
                 )
                 self._order_counter += 1
                 export_rows.append(dft_row)

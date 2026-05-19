@@ -19,7 +19,7 @@ class AssemblyService:
         ext = os.path.splitext(file_path)[1].lower()
         path_lower = file_path.lower()
 
-        if is_root or ext == ".asm":
+        if ext == ".asm":
             return PlmClass.SUB_ASSY
         
         if ext in [".par", ".psm"]:

@@ -36,7 +36,7 @@ class UnifiedMultiASMExportUseCase:
         idx1, idx2 = revision_service.calculate_previous_indices(node.metadata.version)
         
         suffix = self._get_attachment_suffix(node.cad_file.plm_class)
-        attachments = (node.cad_file.full_path_str + suffix).replace(" ", "_")
+        attachments = (node.cad_file.full_path_str + suffix)
         
         # RÈGLE : Version par défaut à "-" si vide
         version = node.metadata.version
@@ -253,7 +253,7 @@ class UnifiedMultiASMExportUseCase:
             user_version_1=dft_meta.auteur_modif, date_version_1=dft_meta.date_modif,
             matiere=source_node.metadata.matiere, densite=source_node.metadata.densite,
             dia_se=source_node.metadata.dia_se,
-            attachments=(dft_cad.full_path_str + "(DRW)").replace(" ", "_")
+            attachments=(dft_cad.full_path_str + "(DRW)")
         )
         self._order_counter += 1
         rows.append(dft_row)
