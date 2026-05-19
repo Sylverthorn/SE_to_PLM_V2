@@ -63,6 +63,27 @@ QPushButton:disabled {
     min-height: 40px;
 }
 
+#btn_annuler {
+    background-color: #f3f3f3;
+    color: #333333;
+    border: 1px solid #cccccc;
+    font-size: 10pt;
+}
+
+#btn_annuler:hover {
+    background-color: #e5e5e5;
+}
+
+#btn_annuler:enabled {
+    background-color: #ffd7d7;
+    color: #a80000;
+    border: 1px solid #e81123;
+}
+
+#btn_annuler:enabled:hover {
+    background-color: #ffb3b3;
+}
+
 QProgressBar {
     border: 1px solid #cccccc;
     border-radius: 4px;

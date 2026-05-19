@@ -83,10 +83,20 @@ class MainWindow(QMainWindow):
 
         # 3. Action & Progress
         action_layout = QVBoxLayout()
+        
+        buttons_layout = QHBoxLayout()
         self.btn_extraire = QPushButton("LANCER L'EXTRACTION")
         self.btn_extraire.setObjectName("btn_extraire")
         self.btn_extraire.clicked.connect(self._start_extraction)
-        action_layout.addWidget(self.btn_extraire)
+        buttons_layout.addWidget(self.btn_extraire, stretch=2)
+
+        self.btn_annuler = QPushButton("ANNULER")
+        self.btn_annuler.setObjectName("btn_annuler")
+        self.btn_annuler.setEnabled(False)
+        self.btn_annuler.clicked.connect(self._cancel_extraction)
+        buttons_layout.addWidget(self.btn_annuler, stretch=1)
+        
+        action_layout.addLayout(buttons_layout)
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
@@ -347,6 +357,7 @@ class MainWindow(QMainWindow):
         
         self.btn_extraire.setEnabled(False)
         self.btn_extraire.setText("EXTRACTION EN COURS...")
+        self.btn_annuler.setEnabled(True)
         self.console.clear()
         
         self._thread = ExtractionThread(
@@ -359,6 +370,12 @@ class MainWindow(QMainWindow):
         self._thread.finished_signal.connect(self._on_finished)
         self._thread.start()
 
+    def _cancel_extraction(self):
+        if self._thread and self._thread.isRunning():
+            self.btn_annuler.setEnabled(False)
+            self.btn_annuler.setText("ANNULATION...")
+            self._thread.cancel()
+
     def _update_progress(self, val, maximum, msg):
         self.progress_bar.setValue(val)
         self.status_label.setText(msg)
@@ -366,8 +383,11 @@ class MainWindow(QMainWindow):
     def _on_finished(self, success, message):
         self.btn_extraire.setEnabled(True)
         self.btn_extraire.setText("LANCER L'EXTRACTION")
+        self.btn_annuler.setEnabled(False)
+        self.btn_annuler.setText("ANNULER")
+        
         if success: QMessageBox.information(self, "Succès", message)
-        else: QMessageBox.critical(self, "Erreur", message)
+        else: QMessageBox.information(self, "Info", message) if "annulée" in message else QMessageBox.critical(self, "Erreur", message)
 
     def closeEvent(self, event):
         reply = QMessageBox.question(
