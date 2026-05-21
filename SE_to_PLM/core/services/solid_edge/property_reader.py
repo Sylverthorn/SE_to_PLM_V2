@@ -1,5 +1,6 @@
 import win32com.client
 import os
+import re
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -58,6 +59,21 @@ class PropertyReader:
                 
         return val_str
 
+    def normalize_density(self, value: Any) -> str:
+        """Extracts only the numeric part of a density value (stripping units)."""
+        if value is None:
+            return ""
+        val_str = str(value).strip()
+        if not val_str:
+            return ""
+            
+        # Match beginning of string: digits, spaces, dots, commas
+        # Example: "7 850,00 kg/m^3" -> "7 850,00"
+        match = re.match(r"^[0-9\s,.]+", val_str)
+        if match:
+            return match.group(0).strip()
+        return val_str
+
     def _map_property(self, name: str, value: Any, meta: Metadata):
         """Maps a single Solid Edge property to our Metadata model (case-insensitive)."""
         name_lower = name.lower().strip()
@@ -93,7 +109,7 @@ class PropertyReader:
             
         # Density
         elif name_lower in ["densité", "densite", "density"]:
-            if not meta.densite: meta.densite = val_str
+            if not meta.densite: meta.densite = self.normalize_density(value)
             
         # Dia SE
         elif name_lower in ["dia_se", "diamètre", "diametre", "dia"]:
@@ -135,6 +151,8 @@ class PropertyReader:
                         if val is not None:
                             if "date" in cle_meta:
                                 setattr(meta, cle_meta, self.normalize_date(val))
+                            elif "densite" in cle_meta:
+                                setattr(meta, cle_meta, self.normalize_density(val))
                             else:
                                 setattr(meta, cle_meta, str(val).strip())
                     except:
@@ -173,6 +191,8 @@ class PropertyReader:
                             if val is not None:
                                 if "date" in cle_meta:
                                     setattr(meta, cle_meta, self.normalize_date(val))
+                                elif "densite" in cle_meta:
+                                    setattr(meta, cle_meta, self.normalize_density(val))
                                 else:
                                     setattr(meta, cle_meta, str(val).strip())
                         except:
