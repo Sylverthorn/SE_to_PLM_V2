@@ -100,6 +100,12 @@ class UnifiedMultiASMExportUseCase:
             logger.warning("Aucun fichier .asm trouvé.")
             return
 
+        # OPTIMISATION : Tri par taille décroissante (les gros fichiers en premier)
+        # Les gros fichiers sont probablement les assemblages de tête, pas des sous-assemblages
+        if is_folder_source:
+            head_asms.sort(key=lambda p: os.path.getsize(p), reverse=True)
+            logger.info(f"Fichiers .asm triés par taille décroissante : {len(head_asms)} fichiers")
+
         # 2. Index Drawings (Important: always index for Multi-ASM)
         if progress_callback: progress_callback(5, 100, "Recherche des plans...")
         index_plans = dft_indexer.index_drawings(
@@ -122,9 +128,19 @@ class UnifiedMultiASMExportUseCase:
         unique_assemblies: Dict[str, AssemblyNode] = {}
         unique_items_for_dft: Dict[str, AssemblyNode] = {}
         
+        # OPTIMISATION : Registre des chemins de fichiers visités (pour éviter les redondances)
+        visited_asm_paths: Set[str] = set()
+        
         total_heads = len(head_asms)
         for idx, head_path in enumerate(head_asms):
             if is_cancelled and is_cancelled(): break
+            
+            # OPTIMISATION : Normaliser le chemin absolu et vérifier s'il a déjà été analysé
+            head_path_normalized = os.path.normpath(os.path.abspath(head_path)).lower()
+            if head_path_normalized in visited_asm_paths:
+                logger.info(f"Fichier déjà analysé, ignoré : {os.path.basename(head_path)}")
+                continue
+            visited_asm_paths.add(head_path_normalized)
             
             progress_val = 25 + int((idx / total_heads) * 30)
             if progress_callback: progress_callback(progress_val, 100, f"Analyse structure {idx+1}/{total_heads}...")
@@ -138,6 +154,10 @@ class UnifiedMultiASMExportUseCase:
                     unique_items_for_dft[path_lower] = node
                     
                     if node.cad_file.plm_class == PlmClass.SUB_ASSY:
+                        # OPTIMISATION : Enregistrer le chemin normalisé du sous-assemblage dans le registre des visités
+                        sub_asm_path_normalized = os.path.normpath(node.cad_file.full_path_str).lower()
+                        visited_asm_paths.add(sub_asm_path_normalized)
+                        
                         if path_lower not in unique_assemblies:
                             unique_assemblies[path_lower] = node
                     
