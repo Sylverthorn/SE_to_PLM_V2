@@ -12,13 +12,15 @@ def test_date_normalization():
 
 def test_density_normalization():
     reader = PropertyReader()
-    assert reader.normalize_density("7850,00 kg/m^3") == "7850,00"
-    assert reader.normalize_density("7 850 kg/m3") == "7 850"
+    assert reader.normalize_density("7850,00 kg/m^3") == "7850.00"
+    assert reader.normalize_density("7 850 kg/m3") == "7850"
     assert reader.normalize_density("7.85 g/cm3") == "7.85"
     assert reader.normalize_density("7850") == "7850"
     assert reader.normalize_density(None) == ""
     assert reader.normalize_density("") == ""
     assert reader.normalize_density("7850.50") == "7850.50"
+    assert reader.normalize_density("1,5 g/cm3") == "1.5"
+    assert reader.normalize_density("8 900,5 kg/m^3") == "8900.5"
 
 def test_plm_class_determination():
     service = AssemblyService()
