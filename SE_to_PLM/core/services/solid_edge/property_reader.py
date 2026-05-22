@@ -60,7 +60,10 @@ class PropertyReader:
         return val_str
 
     def normalize_density(self, value: Any) -> str:
-        """Extracts only the numeric part of a density value (stripping units)."""
+        """Extracts only the numeric part of a density value (stripping units).
+        Ensures the decimal separator is always a dot (.), not a comma.
+        Example: "7 850,00 kg/m^3" -> "7850.00"
+        """
         if value is None:
             return ""
         val_str = str(value).strip()
@@ -68,10 +71,12 @@ class PropertyReader:
             return ""
             
         # Match beginning of string: digits, spaces, dots, commas
-        # Example: "7 850,00 kg/m^3" -> "7 850,00"
         match = re.match(r"^[0-9\s,.]+", val_str)
         if match:
-            return match.group(0).strip()
+            numeric_part = match.group(0).strip()
+            # Remove spaces and replace commas with dots
+            numeric_part = numeric_part.replace(" ", "").replace(",", ".")
+            return numeric_part
         return val_str
 
     def _map_property(self, name: str, value: Any, meta: Metadata):
