@@ -146,7 +146,7 @@ class AssemblyService:
                     root_node.add_child(child_node)
                     
             except Exception as e:
-                logger.error(f"Error exploring RM links of {file_path}: {e}")
+                logger.warning(f"Error exploring RM links of {file_path}: {e}")
             # Note: We don't explicitly close the doc as RM handles its own lifecycle 
             # and it might be needed for recursion in some edge cases.
 
@@ -228,7 +228,7 @@ class AssemblyService:
                             
                         root_node.add_child(child_node)
             except Exception as e:
-                logger.error(f"Error exploring SE occurrences of {file_path}: {e}")
+                logger.warning(f"Error exploring SE occurrences of {file_path}: {e}")
 
         return root_node
 
