@@ -20,7 +20,8 @@ class ExtractionThread(QThread):
     def __init__(self, input_path: str, output_dir: str, output_name: str, 
                  dft_folder: str = None, search_mode: str = "les_deux", 
                  mode: str = "assembly", recursive: bool = False,
-                 is_folder_source: bool = False, output_mode: str = "single"):
+                 is_folder_source: bool = False, output_mode: str = "single",
+                 chunk_index: int = 0, chunk_size: int = -1):
         super().__init__()
         self.input_path = input_path
         self.output_dir = output_dir
@@ -31,6 +32,8 @@ class ExtractionThread(QThread):
         self.recursive = recursive
         self.is_folder_source = is_folder_source
         self.output_mode = output_mode # "single" ou "multiple"
+        self.chunk_index = chunk_index
+        self.chunk_size = chunk_size
         self._is_cancelled = False
 
     def cancel(self):
@@ -84,7 +87,9 @@ class ExtractionThread(QThread):
                     dft_folder=self.dft_folder,
                     search_mode=self.search_mode,
                     progress_callback=self.progress_signal.emit,
-                    is_cancelled=self._check_cancelled
+                    is_cancelled=self._check_cancelled,
+                    chunk_size=self.chunk_size,
+                    chunk_index=self.chunk_index
                 )
             
             if self._is_cancelled:
