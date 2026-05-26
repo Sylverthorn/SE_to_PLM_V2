@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QLineEdit, QPushButton, QComboBox, QProgressBar, QTextEdit, 
     QFileDialog, QMessageBox, QGroupBox, QApplication, QTabWidget,
-    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider
+    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider, QSpinBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCursor
@@ -231,11 +231,23 @@ class MainWindow(QMainWindow):
         group_chunk = QGroupBox("Traitement par lots (Chunking)")
         chunk_layout = QVBoxLayout(group_chunk)
         
-        # Checkbox pour activer le mode par lots
-        self.multi_chunk_enable_checkbox = QCheckBox("Activer le traitement par lots (100 fichiers par lot)")
+        # Ligne avec checkbox et contrôle de taille de lot
+        checkbox_size_row = QHBoxLayout()
+        self.multi_chunk_enable_checkbox = QCheckBox("Activer le traitement par lots")
         self.multi_chunk_enable_checkbox.setChecked(False)
         self.multi_chunk_enable_checkbox.toggled.connect(self._on_chunk_mode_toggled)
-        chunk_layout.addWidget(self.multi_chunk_enable_checkbox)
+        checkbox_size_row.addWidget(self.multi_chunk_enable_checkbox)
+        
+        checkbox_size_row.addWidget(QLabel("Taille du lot:"))
+        self.multi_chunk_size_spinbox = QSpinBox()
+        self.multi_chunk_size_spinbox.setMinimum(10)
+        self.multi_chunk_size_spinbox.setMaximum(1000)
+        self.multi_chunk_size_spinbox.setValue(100)
+        self.multi_chunk_size_spinbox.setSingleStep(10)
+        self.multi_chunk_size_spinbox.valueChanged.connect(self._on_chunk_size_changed)
+        checkbox_size_row.addWidget(self.multi_chunk_size_spinbox)
+        checkbox_size_row.addStretch()
+        chunk_layout.addLayout(checkbox_size_row)
         
         # Conteneur pour les contrôles du slider (initially hidden)
         self.multi_chunk_controls_widget = QWidget()
@@ -337,7 +349,7 @@ class MainWindow(QMainWindow):
                 self.multi_chunk_info_label.setText("Aucun fichier .asm trouvé")
                 return
             
-            chunk_size = 100
+            chunk_size = self.multi_chunk_size_spinbox.value()
             total_chunks = (asm_count + chunk_size - 1) // chunk_size
             
             self.multi_chunk_file_count_label.setText(str(asm_count))
@@ -352,7 +364,7 @@ class MainWindow(QMainWindow):
     def _update_multi_chunk_info(self):
         """Met à jour l'affichage des infos du chunk courant quand le slider change."""
         chunk_index = self.multi_chunk_slider.value()
-        chunk_size = 100
+        chunk_size = self.multi_chunk_size_spinbox.value()
         total_chunks = self.multi_chunk_slider.maximum() + 1
         
         start_idx = chunk_index * chunk_size
@@ -391,6 +403,15 @@ class MainWindow(QMainWindow):
             if " - Lot " in current_name:
                 base_name = current_name.split(" - Lot ")[0]
                 self.output_name_edit.setText(base_name)
+
+    def _on_chunk_size_changed(self):
+        """Recalcule les chunks quand la taille de lot change."""
+        path = self.multi_path_edit.text()
+        if path and os.path.isdir(path) and self.multi_chunk_enable_checkbox.isChecked():
+            # Recalculer les chunks avec la nouvelle taille
+            self._scan_and_update_chunks(path)
+            # Réinitialiser le slider à 0
+            self.multi_chunk_slider.setValue(0)
 
     def _load_style(self):
         style_path = Path(__file__).parent.parent / "styles" / "style.qss"
@@ -507,7 +528,7 @@ class MainWindow(QMainWindow):
             if is_folder_source and output_mode == "single" and self.multi_chunk_enable_checkbox.isChecked():
                 # Mode chunking activé: traiter un seul lot
                 chunk_index = self.multi_chunk_slider.value()
-                chunk_size = 100
+                chunk_size = self.multi_chunk_size_spinbox.value()
 
         if not input_path or not os.path.exists(input_path):
             QMessageBox.warning(self, "Erreur", "Vérifiez votre sélection.")
