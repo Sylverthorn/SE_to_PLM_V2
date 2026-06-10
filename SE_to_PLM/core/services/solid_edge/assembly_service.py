@@ -36,8 +36,8 @@ class AssemblyService:
     def get_mode_appro(self, file_path: str) -> str:
         """
         Determines the procurement mode:
-        - 'approvisionnement externe' for .psm files or files in library folders.
-        - 'fabrication interne' for everything else.
+        - 'Approvisionnement externe' for .psm files or files in library folders.
+        - 'Fabrication interne' for everything else.
         """
         ext = os.path.splitext(file_path)[1].lower()
         path_lower = file_path.lower()
@@ -46,8 +46,8 @@ class AssemblyService:
         is_library = any(lib in path_lower for lib in ["bibliothèque", "bibliotheque", "library"])
         
         if is_psm or is_library:
-            return "approvisionnement externe"
-        return "fabrication interne"
+            return "Approvisionnement externe"
+        return "Fabrication interne"
 
     def explore_assembly(self, doc_or_path: Any, rm_app: Optional[Any] = None, level: int = 0) -> AssemblyNode:
         """

@@ -14,7 +14,7 @@ def test_excel_generation(tmp_path):
             version="A", indice_1="-", indice_2="-", revision="1",
             designation="Top Assy", cus_createur="Admin", cus_date_crea="2026",
             user_version_1="", date_version_1="", matiere="",
-            densite="", dia_se="", mode_appro="fabrication interne", attachments="C:/Root.asm"
+            densite="", dia_se="", mode_appro="Fabrication interne", attachments="C:/Root.asm"
         ),
         ExportRow(
             level=1, relationship="ComposedOf", order=2, quantity=2, repere="",
@@ -22,7 +22,7 @@ def test_excel_generation(tmp_path):
             version="B", indice_1="A", indice_2="-", revision="1",
             designation="Simple Part", cus_createur="User", cus_date_crea="2026",
             user_version_1="", date_version_1="", matiere="Steel",
-            densite="7.8", dia_se="", mode_appro="fabrication interne", attachments="C:/Part1.par"
+            densite="7.8", dia_se="", mode_appro="Fabrication interne", attachments="C:/Part1.par"
         )
     ]
     
