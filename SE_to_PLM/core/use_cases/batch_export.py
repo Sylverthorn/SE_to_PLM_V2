@@ -187,7 +187,7 @@ class BatchExportUseCase:
                     matiere=meta_piece.matiere,
                     densite=meta_piece.densite,
                     dia_se=meta_piece.dia_se,
-                    mode_appro=assembly_service.get_mode_appro(dft_path),
+                    mode_appro=assembly_service.get_mode_appro(file_path),
                     attachments=(dft_cad.full_path_str + "(DRW)")
                 )
                 self._order_counter += 1
