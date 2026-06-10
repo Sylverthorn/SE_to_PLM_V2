@@ -1,4 +1,5 @@
 import os
+import win32com.client
 from typing import List, Dict, Optional, Callable, Set, Tuple
 from pathlib import Path
 
@@ -117,47 +118,46 @@ class UnifiedMultiASMExportUseCase:
 
         if is_cancelled and is_cancelled(): return
 
-        # 3. Connect to Solid Edge
-        if progress_callback: progress_callback(20, 100, "Connexion à Solid Edge...")
-        app = connection_manager.get_application()
-        if not app:
-            logger.error("Impossible de se connecter à Solid Edge.")
+        # 3. Connect to Design Manager (Revision Manager) instead of Solid Edge
+        if progress_callback: progress_callback(20, 100, "Démarrage du gestionnaire de liens...")
+        try:
+            rm_app = win32com.client.Dispatch("RevisionManager.Application")
+            rm_app.Visible = False
+        except Exception as e:
+            logger.error(f"Impossible de lancer Revision Manager : {e}")
             return
 
         # 4. Explore all assemblies (Deduplicated)
         unique_assemblies: Dict[str, AssemblyNode] = {}
         unique_items_for_dft: Dict[str, AssemblyNode] = {}
         
-        # OPTIMISATION : Registre des chemins de fichiers visités (pour éviter les redondances)
+        # OPTIMISATION : Registre anti-redondance
         visited_asm_paths: Set[str] = set()
         
         total_heads = len(head_asms)
         for idx, head_path in enumerate(head_asms):
             if is_cancelled and is_cancelled(): break
             
-            # OPTIMISATION : Normaliser le chemin absolu et vérifier s'il a déjà été analysé
-            head_path_normalized = os.path.normpath(os.path.abspath(head_path)).lower()
-            if head_path_normalized in visited_asm_paths:
-                logger.info(f"Fichier déjà analysé, ignoré : {os.path.basename(head_path)}")
-                continue
-            visited_asm_paths.add(head_path_normalized)
+            norm_head_path = os.path.normcase(os.path.abspath(head_path))
             
+            # Si le fichier a déjà été rencontré à l'intérieur d'un autre ASM, on l'ignore
+            if norm_head_path in visited_asm_paths:
+                logger.info(f"Fichier déjà analysé via un parent, ignoré : {os.path.basename(head_path)}")
+                continue
+                
             progress_val = 25 + int((idx / total_heads) * 30)
             if progress_callback: progress_callback(progress_val, 100, f"Analyse structure {idx+1}/{total_heads}...")
             
             try:
-                doc = app.Documents.Open(head_path)
-                tree = assembly_service.explore_assembly(doc)
+                # Utilisation du nouveau système avec Revision Manager
+                tree = assembly_service.explore_assembly(head_path, rm_app)
                 
                 def collect_data(node: AssemblyNode):
-                    path_lower = node.cad_file.full_path_str.lower()
+                    path_lower = os.path.normcase(os.path.abspath(node.cad_file.full_path_str))
                     unique_items_for_dft[path_lower] = node
                     
                     if node.cad_file.plm_class == PlmClass.SUB_ASSY:
-                        # OPTIMISATION : Enregistrer le chemin normalisé du sous-assemblage dans le registre des visités
-                        sub_asm_path_normalized = os.path.normpath(node.cad_file.full_path_str).lower()
-                        visited_asm_paths.add(sub_asm_path_normalized)
-                        
+                        visited_asm_paths.add(path_lower) # Ajout au registre
                         if path_lower not in unique_assemblies:
                             unique_assemblies[path_lower] = node
                     
@@ -165,9 +165,14 @@ class UnifiedMultiASMExportUseCase:
                         collect_data(child)
 
                 collect_data(tree)
-                doc.Close(False) # Always close after analysis
             except Exception as e:
                 logger.warning(f"Impossible d'analyser {os.path.basename(head_path)} : {e}")
+
+        # On quitte Revision Manager proprement
+        try:
+            rm_app.Quit()
+        except:
+            pass
 
         if is_cancelled and is_cancelled(): return
 

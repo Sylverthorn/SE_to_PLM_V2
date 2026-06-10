@@ -1,5 +1,5 @@
 import os
-import time
+import win32com.client
 from typing import List, Dict, Optional, Callable
 from pathlib import Path
 
@@ -92,22 +92,24 @@ class GeneratePLMExportUseCase:
 
         if is_cancelled and is_cancelled(): return
 
-        # 2. Connect to Solid Edge
-        if progress_callback: progress_callback(25, 100, "Connexion à Solid Edge...")
-        app = connection_manager.get_application()
-        if not app:
-            logger.error("Impossible de se connecter à Solid Edge. Vérifiez qu'il est installé.")
+        # 2. Connect to Design Manager (Revision Manager) instead of Solid Edge
+        if progress_callback: progress_callback(25, 100, "Démarrage du gestionnaire de liens...")
+        try:
+            rm_app = win32com.client.Dispatch("RevisionManager.Application")
+            rm_app.Visible = False
+        except Exception as e:
+            logger.error(f"Impossible de lancer Revision Manager : {e}")
             return
 
-        # 3. Open and Traverse Assembly
-        if progress_callback: progress_callback(35, 100, "Ouverture du document...")
+        # 3. Traverse Assembly
+        if progress_callback: progress_callback(35, 100, "Analyse de la structure...")
         try:
-            doc = app.Documents.Open(input_file)
+            tree = assembly_service.explore_assembly(input_file, rm_app)
             
-            if progress_callback: progress_callback(45, 100, "Analyse de la structure...")
-            tree = assembly_service.explore_assembly(doc)
-            
-            if is_cancelled and is_cancelled(): return
+            if is_cancelled and is_cancelled(): 
+                try: rm_app.Quit()
+                except: pass
+                return
 
             # 4. Flatten and Process
             if progress_callback: progress_callback(70, 100, "Préparation des données...")
@@ -149,9 +151,10 @@ class GeneratePLMExportUseCase:
             logger.error(f"Échec de l'extraction : {str(e)}")
             raise
         finally:
-            # We don't close SE, just our documents if we opened them
-            # connection_manager.close_all_documents()
-            pass
+            try:
+                rm_app.Quit()
+            except:
+                pass
 
     def _add_drawing_rows(self, dft_path: str, source_node: AssemblyNode, rows: List[ExportRow]):
         """
