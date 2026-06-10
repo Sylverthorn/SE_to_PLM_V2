@@ -231,6 +231,11 @@ class MainWindow(QMainWindow):
         group_chunk = QGroupBox("Traitement par lots (Chunking)")
         chunk_layout = QVBoxLayout(group_chunk)
         
+        # Message d'aide
+        self.multi_chunk_help_label = QLabel("Note : Le traitement par lots nécessite le mode de sortie 'Un seul fichier'.")
+        self.multi_chunk_help_label.setStyleSheet("color: #888; font-style: italic; margin-bottom: 2px;")
+        chunk_layout.addWidget(self.multi_chunk_help_label)
+        
         # Ligne avec checkbox et contrôle de taille de lot
         checkbox_size_row = QHBoxLayout()
         self.multi_chunk_enable_checkbox = QCheckBox("Activer le traitement par lots")
