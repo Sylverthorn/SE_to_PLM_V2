@@ -22,7 +22,8 @@ class ExportRow:
     matiere: str             # 18: matiere
     densite: str             # 19: densite
     dia_se: str              # 20: dia_se
-    attachments: str         # 21: Attachments
+    mode_appro: str          # 21: mode_appro
+    attachments: str         # 22: Attachments
 
     def to_list(self) -> list:
         """Returns the row as a list for openpyxl."""
@@ -32,5 +33,5 @@ class ExportRow:
             self.version, self.indice_1, self.indice_2, self.revision,
             self.designation, self.cus_createur, self.cus_date_crea,
             self.user_version_1, self.date_version_1, self.matiere,
-            self.densite, self.dia_se, self.attachments
+            self.densite, self.dia_se, self.mode_appro, self.attachments
         ]

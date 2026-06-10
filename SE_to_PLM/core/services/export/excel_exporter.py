@@ -15,7 +15,7 @@ class ExcelExporter:
         "Level", "Relationship", "ordre", "quantite", "repere", "SpecialCAD",
         "Class", "ref_utilisat", "version", "indice_1", "indice_2", "revision",
         "designation", "cus_createur", "cus_date_crea", "user_version_1",
-        "date_version_1", "matiere", "densite", "dia_se", "Attachments"
+        "date_version_1", "matiere", "densite", "dia_se", "mode_appro", "Attachments"
     ]
 
     def create_export(self, rows: List[ExportRow], output_path: str):

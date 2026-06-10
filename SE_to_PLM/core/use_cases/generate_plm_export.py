@@ -62,6 +62,7 @@ class GeneratePLMExportUseCase:
             matiere=node.metadata.matiere,
             densite=node.metadata.densite,
             dia_se=node.metadata.dia_se,
+            mode_appro=assembly_service.get_mode_appro(node.cad_file.full_path_str),
             attachments=attachments
         )
         self._order_counter += 1
@@ -201,6 +202,7 @@ class GeneratePLMExportUseCase:
             matiere=source_node.metadata.matiere, # DFTs don't have material
             densite=source_node.metadata.densite,
             dia_se=source_node.metadata.dia_se,
+            mode_appro=assembly_service.get_mode_appro(dft_path),
             attachments=(dft_cad.full_path_str + "(DRW)")
         )
         self._order_counter += 1

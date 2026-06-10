@@ -43,10 +43,11 @@ def test_export_row_to_list():
         version="A", indice_1="-", indice_2="-", revision="1",
         designation="Desc", cus_createur="User", cus_date_crea="Date",
         user_version_1="", date_version_1="", matiere="Steel",
-        densite="7.8", dia_se="", attachments="Path"
+        densite="7.8", dia_se="", mode_appro="fabrication interne", attachments="Path"
     )
     row_list = row.to_list()
-    assert len(row_list) == 21
+    assert len(row_list) == 22
     assert row_list[0] == 0
     assert row_list[6] == "PART_A"
-    assert row_list[20] == "Path"
+    assert row_list[20] == "fabrication interne"
+    assert row_list[21] == "Path"

@@ -6,6 +6,7 @@ from pathlib import Path
 from SE_to_PLM.core.models.enums import PlmClass, RelationshipType
 from SE_to_PLM.core.models.cad_file import CadFile
 from SE_to_PLM.core.models.export_row import ExportRow
+from SE_to_PLM.core.services.solid_edge.assembly_service import assembly_service
 from SE_to_PLM.core.services.solid_edge.metadata_service import metadata_service
 from SE_to_PLM.core.services.indexing.dft_indexer import dft_indexer
 from SE_to_PLM.core.services.export.excel_exporter import excel_exporter
@@ -69,6 +70,7 @@ class BatchExportUseCase:
             matiere=metadata.matiere,
             densite=metadata.densite,
             dia_se=metadata.dia_se,
+            mode_appro=assembly_service.get_mode_appro(cad_file.full_path_str),
             attachments=attachments
         )
         self._order_counter += 1
@@ -185,6 +187,7 @@ class BatchExportUseCase:
                     matiere=meta_piece.matiere,
                     densite=meta_piece.densite,
                     dia_se=meta_piece.dia_se,
+                    mode_appro=assembly_service.get_mode_appro(dft_path),
                     attachments=(dft_cad.full_path_str + "(DRW)")
                 )
                 self._order_counter += 1
