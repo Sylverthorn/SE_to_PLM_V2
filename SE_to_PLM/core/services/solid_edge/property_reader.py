@@ -207,7 +207,7 @@ class PropertyReader:
                     prop = p_set.Item(j)
                     self._map_property(prop.Name, prop.Value, meta)
         except Exception as e:
-            logger.error(f"Erreur extraction objet COM : {e}")
+            logger.warning(f"Erreur extraction objet COM : {e}")
 
         return meta
 

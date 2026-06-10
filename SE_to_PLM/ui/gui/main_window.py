@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QLineEdit, QPushButton, QComboBox, QProgressBar, QTextEdit, 
     QFileDialog, QMessageBox, QGroupBox, QApplication, QTabWidget,
-    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea
+    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider, QSpinBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCursor
@@ -215,7 +215,7 @@ class MainWindow(QMainWindow):
         out_format_layout = QVBoxLayout(group_out)
         self.radio_out_multiple = QRadioButton("Plusieurs fichiers (Un par sous-assemblage)")
         self.radio_out_single = QRadioButton("Un seul fichier (Tous les blocs Niv 0/1)")
-        self.radio_out_multiple.setChecked(True)
+        self.radio_out_single.setChecked(True)
         out_format_layout.addWidget(self.radio_out_multiple)
         out_format_layout.addWidget(self.radio_out_single)
         layout.addWidget(group_out)
@@ -226,6 +226,71 @@ class MainWindow(QMainWindow):
         # Ajout de la logique DFT pour le Multi-ASM
         self.multi_dft_group, self.multi_mode_combo, self.multi_dft_edit, self.multi_btn_dft_browse = self._create_dft_indexing_group()
         layout.addWidget(self.multi_dft_group)
+
+        # 3. Chunk Processing Options
+        group_chunk = QGroupBox("Traitement par lots (Chunking)")
+        chunk_layout = QVBoxLayout(group_chunk)
+        
+        # Ligne avec checkbox et contrôle de taille de lot
+        checkbox_size_row = QHBoxLayout()
+        self.multi_chunk_enable_checkbox = QCheckBox("Activer le traitement par lots")
+        self.multi_chunk_enable_checkbox.setChecked(False)
+        self.multi_chunk_enable_checkbox.toggled.connect(self._on_chunk_mode_toggled)
+        checkbox_size_row.addWidget(self.multi_chunk_enable_checkbox)
+        
+        checkbox_size_row.addWidget(QLabel("Taille du lot:"))
+        self.multi_chunk_size_spinbox = QSpinBox()
+        self.multi_chunk_size_spinbox.setMinimum(10)
+        self.multi_chunk_size_spinbox.setMaximum(1000)
+        self.multi_chunk_size_spinbox.setValue(100)
+        self.multi_chunk_size_spinbox.setSingleStep(10)
+        self.multi_chunk_size_spinbox.valueChanged.connect(self._on_chunk_size_changed)
+        checkbox_size_row.addWidget(self.multi_chunk_size_spinbox)
+        checkbox_size_row.addStretch()
+        chunk_layout.addLayout(checkbox_size_row)
+        
+        # Conteneur pour les contrôles du slider (initially hidden)
+        self.multi_chunk_controls_widget = QWidget()
+        chunk_controls_layout = QVBoxLayout(self.multi_chunk_controls_widget)
+        chunk_controls_layout.setContentsMargins(10, 10, 10, 0)
+        
+        # Info sur le nombre de fichiers et de lots
+        info_row = QHBoxLayout()
+        info_row.addWidget(QLabel("Fichiers .asm trouvés:"))
+        self.multi_chunk_file_count_label = QLabel("0")
+        info_row.addWidget(self.multi_chunk_file_count_label)
+        info_row.addStretch()
+        chunk_controls_layout.addLayout(info_row)
+        
+        lot_count_row = QHBoxLayout()
+        lot_count_row.addWidget(QLabel("Nombre de lots (taille 100):"))
+        self.multi_chunk_count_label = QLabel("1")
+        lot_count_row.addWidget(self.multi_chunk_count_label)
+        lot_count_row.addStretch()
+        chunk_controls_layout.addLayout(lot_count_row)
+        
+        # Slider pour sélectionner le lot
+        slider_row = QHBoxLayout()
+        slider_row.addWidget(QLabel("Sélectionner le lot:"))
+        self.multi_chunk_slider = QSlider(Qt.Horizontal)
+        self.multi_chunk_slider.setMinimum(0)
+        self.multi_chunk_slider.setMaximum(0)
+        self.multi_chunk_slider.setValue(0)
+        self.multi_chunk_slider.setTickPosition(QSlider.TicksBelow)
+        self.multi_chunk_slider.setTickInterval(1)
+        self.multi_chunk_slider.valueChanged.connect(self._update_multi_chunk_info)
+        slider_row.addWidget(self.multi_chunk_slider)
+        chunk_controls_layout.addLayout(slider_row)
+        
+        # Label pour afficher le statut du lot courant
+        self.multi_chunk_info_label = QLabel("Lot 1 sur 1 (fichiers 0-0)")
+        chunk_controls_layout.addWidget(self.multi_chunk_info_label)
+        
+        # Initialiser le widget comme invisible
+        self.multi_chunk_controls_widget.setVisible(False)
+        chunk_layout.addWidget(self.multi_chunk_controls_widget)
+        
+        layout.addWidget(group_chunk)
 
         layout.addStretch()
 
@@ -267,6 +332,87 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Dossier plans")
         if folder: dft_edit.setText(folder)
 
+    def _scan_and_update_chunks(self, folder_path):
+        """Scanne un dossier pour compter les fichiers .asm et mettre à jour les contrôles de chunk."""
+        try:
+            asm_count = 0
+            for root, _, files in os.walk(folder_path):
+                for f in files:
+                    if f.lower().endswith(".asm"):
+                        asm_count += 1
+            
+            if asm_count == 0:
+                self.multi_chunk_file_count_label.setText("0")
+                self.multi_chunk_count_label.setText("0")
+                self.multi_chunk_slider.setMaximum(0)
+                self.multi_chunk_slider.setValue(0)
+                self.multi_chunk_info_label.setText("Aucun fichier .asm trouvé")
+                return
+            
+            chunk_size = self.multi_chunk_size_spinbox.value()
+            total_chunks = (asm_count + chunk_size - 1) // chunk_size
+            
+            self.multi_chunk_file_count_label.setText(str(asm_count))
+            self.multi_chunk_count_label.setText(str(total_chunks))
+            self.multi_chunk_slider.setMaximum(max(0, total_chunks - 1))
+            self.multi_chunk_slider.setValue(0)
+            
+            self._update_multi_chunk_info()
+        except Exception as e:
+            self.multi_chunk_info_label.setText(f"Erreur lors du scan: {str(e)}")
+
+    def _update_multi_chunk_info(self):
+        """Met à jour l'affichage des infos du chunk courant quand le slider change."""
+        chunk_index = self.multi_chunk_slider.value()
+        chunk_size = self.multi_chunk_size_spinbox.value()
+        total_chunks = self.multi_chunk_slider.maximum() + 1
+        
+        start_idx = chunk_index * chunk_size
+        total_files = int(self.multi_chunk_file_count_label.text()) if self.multi_chunk_file_count_label.text() else 0
+        end_idx = min((chunk_index + 1) * chunk_size, total_files)
+        
+        display_text = f"Lot {chunk_index + 1} sur {total_chunks} (fichiers {start_idx}-{end_idx-1})"
+        self.multi_chunk_info_label.setText(display_text)
+        
+        # Mettre à jour le nom du fichier de sortie avec le numéro du lot
+        if self.multi_chunk_enable_checkbox.isChecked():
+            current_name = self.output_name_edit.text()
+            # Enlever le suffixe de lot existant s'il y en a un
+            if " - Lot " in current_name:
+                base_name = current_name.split(" - Lot ")[0]
+            else:
+                base_name = current_name
+            # Ajouter le nouveau numéro de lot
+            lot_number = f"{chunk_index + 1:03d}"
+            self.output_name_edit.setText(f"{base_name} - Lot {lot_number}")
+
+    def _on_chunk_mode_toggled(self, checked):
+        """Active/désactive les contrôles de chunking selon l'état de la checkbox."""
+        path = self.multi_path_edit.text()
+        
+        if checked:
+            # Activer le mode chunking
+            self.multi_chunk_controls_widget.setVisible(True)
+            if path and os.path.isdir(path):
+                self._scan_and_update_chunks(path)
+        else:
+            # Désactiver le mode chunking
+            self.multi_chunk_controls_widget.setVisible(False)
+            # Enlever le suffixe de lot du nom du fichier
+            current_name = self.output_name_edit.text()
+            if " - Lot " in current_name:
+                base_name = current_name.split(" - Lot ")[0]
+                self.output_name_edit.setText(base_name)
+
+    def _on_chunk_size_changed(self):
+        """Recalcule les chunks quand la taille de lot change."""
+        path = self.multi_path_edit.text()
+        if path and os.path.isdir(path) and self.multi_chunk_enable_checkbox.isChecked():
+            # Recalculer les chunks avec la nouvelle taille
+            self._scan_and_update_chunks(path)
+            # Réinitialiser le slider à 0
+            self.multi_chunk_slider.setValue(0)
+
     def _load_style(self):
         style_path = Path(__file__).parent.parent / "styles" / "style.qss"
         if style_path.exists():
@@ -288,12 +434,22 @@ class MainWindow(QMainWindow):
     def _browse_multi_path(self):
         if self.radio_multi_file.isChecked():
             path, _ = QFileDialog.getOpenFileName(self, "Assemblage", "", "Assemblage Solid Edge (*.asm)")
+            if path:
+                self.multi_path_edit.setText(path)
+                # Désactiver les contrôles de chunk pour un fichier unique
+                self.multi_chunk_enable_checkbox.setEnabled(False)
+                self.multi_chunk_controls_widget.setVisible(False)
+                self._update_multi_asm_labels()
         else:
             path = QFileDialog.getExistingDirectory(self, "Dossier d'assemblages")
-        
-        if path:
-            self.multi_path_edit.setText(path)
-            self._update_multi_asm_labels()
+            if path:
+                self.multi_path_edit.setText(path)
+                # Activer la checkbox de chunking pour un dossier
+                self.multi_chunk_enable_checkbox.setEnabled(True)
+                # Si la checkbox est déjà cochée, scanner le dossier
+                if self.multi_chunk_enable_checkbox.isChecked():
+                    self._scan_and_update_chunks(path)
+                self._update_multi_asm_labels()
 
     def _update_multi_asm_labels(self):
         path = self.multi_path_edit.text()
@@ -302,12 +458,30 @@ class MainWindow(QMainWindow):
         name = Path(path).stem if self.radio_multi_file.isChecked() else Path(path).name
         timestamp = datetime.now().strftime('%Y%m%d_%H%M')
         
-        if self.radio_out_single.isChecked():
-            self.output_label.setText("Nom du fichier Excel :")
-            self.output_name_edit.setText(f"Export_Multi_ASM_Combined_{name}_{timestamp}.xlsx")
+        is_folder = self.radio_multi_folder.isChecked()
+        is_single_mode = self.radio_out_single.isChecked()
+        
+        if is_single_mode:
+            self.output_label.setText("Nom du fichier/dossier :")
+            if is_folder:
+                # Mode single avec dossier: les fichiers seront dans un dossier avec les fichiers Lot_001.xlsx, etc. (si chunking)
+                self.output_name_edit.setText(f"Export_Multi_ASM_Combined_{name}_{timestamp}")
+            else:
+                # Mode single avec fichier unique: pas de chunking
+                self.output_name_edit.setText(f"Export_Multi_ASM_Combined_{name}_{timestamp}.xlsx")
         else:
             self.output_label.setText("Nom du dossier de sortie :")
             self.output_name_edit.setText(f"Export_Multi_ASM_Files_{name}_{timestamp}")
+        
+        # Activer/désactiver la checkbox de chunking
+        # Le chunking est disponible uniquement quand: dossier + mode single
+        should_enable_chunk = is_folder and is_single_mode
+        self.multi_chunk_enable_checkbox.setEnabled(should_enable_chunk)
+        
+        # Si on n'est pas en mode chunking compatible, désactiver le chunking
+        if not should_enable_chunk:
+            self.multi_chunk_enable_checkbox.setChecked(False)
+            self.multi_chunk_controls_widget.setVisible(False)
 
     def _on_tab_changed(self, index):
         if index == 2: # Multi-ASM
@@ -327,6 +501,8 @@ class MainWindow(QMainWindow):
         recursive = False
         is_folder_source = False
         output_mode = "single"
+        chunk_index = 0
+        chunk_size = -1  # -1 = chunking disabled
         
         # Récupération des widgets selon l'onglet
         if idx == 0:
@@ -347,6 +523,12 @@ class MainWindow(QMainWindow):
             output_mode = "multiple" if self.radio_out_multiple.isChecked() else "single"
             mode_combo = self.multi_mode_combo
             dft_edit = self.multi_dft_edit
+            
+            # Vérifier si le chunking est activé
+            if is_folder_source and output_mode == "single" and self.multi_chunk_enable_checkbox.isChecked():
+                # Mode chunking activé: traiter un seul lot
+                chunk_index = self.multi_chunk_slider.value()
+                chunk_size = self.multi_chunk_size_spinbox.value()
 
         if not input_path or not os.path.exists(input_path):
             QMessageBox.warning(self, "Erreur", "Vérifiez votre sélection.")
@@ -363,7 +545,8 @@ class MainWindow(QMainWindow):
         self._thread = ExtractionThread(
             input_path=input_path, output_dir=str(DEFAULT_EXPORT_DIR), output_name=output_name,
             dft_folder=dft_edit.text(), search_mode=search_mode, mode=mode,
-            recursive=recursive, is_folder_source=is_folder_source, output_mode=output_mode
+            recursive=recursive, is_folder_source=is_folder_source, output_mode=output_mode,
+            chunk_index=chunk_index, chunk_size=chunk_size
         )
         self._thread.progress_signal.connect(self._update_progress)
         self._thread.log_signal.connect(self._log)

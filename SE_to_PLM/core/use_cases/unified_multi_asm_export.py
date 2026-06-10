@@ -15,6 +15,24 @@ from SE_to_PLM.core.services.export.excel_exporter import excel_exporter
 from SE_to_PLM.core.services.plm.revision_service import revision_service
 from SE_to_PLM.core.services.logging.logger_service import logger
 
+class ChunkInfo:
+    """Metadata about file chunking for batch processing."""
+    def __init__(self, total_files: int, chunk_size: int = 100):
+        self.total_files = total_files
+        self.chunk_size = chunk_size
+        self.total_chunks = max(1, (total_files + chunk_size - 1) // chunk_size)
+    
+    def get_chunk_bounds(self, chunk_index: int) -> Tuple[int, int]:
+        """Returns (start_idx, end_idx) for the given chunk."""
+        start = chunk_index * self.chunk_size
+        end = min((chunk_index + 1) * self.chunk_size, self.total_files)
+        return start, end
+    
+    def get_chunk_display(self, chunk_index: int) -> str:
+        """Returns display string like 'Lot 1 sur 5 (fichiers 0-99)'."""
+        start, end = self.get_chunk_bounds(chunk_index)
+        return f"Lot {chunk_index + 1} sur {self.total_chunks} (fichiers {start}-{end-1})"
+
 class UnifiedMultiASMExportUseCase:
     """
     Consolidated use case for Multi-ASM export.
@@ -80,11 +98,15 @@ class UnifiedMultiASMExportUseCase:
         dft_folder: Optional[str] = None,
         search_mode: str = "les_deux",
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
-        is_cancelled: Optional[Callable[[], bool]] = None
+        is_cancelled: Optional[Callable[[], bool]] = None,
+        chunk_size: int = 100,
+        chunk_index: int = 0
     ):
         self._order_counter = 1
         source_type = "dossier" if is_folder_source else "fichier"
-        logger.info(f"Début Multi-ASM (Source: {source_type}, Format: {output_mode})")
+        # Chunking activé si: dossier source + mode single + chunk_size > 0
+        use_chunking = is_folder_source and output_mode == "single" and chunk_size > 0
+        logger.info(f"Début Multi-ASM (Source: {source_type}, Format: {output_mode}, Chunking: {use_chunking})")
 
         # 1. Collect Head ASM files
         head_asms = []
@@ -107,10 +129,24 @@ class UnifiedMultiASMExportUseCase:
             head_asms.sort(key=lambda p: os.path.getsize(p), reverse=True)
             logger.info(f"Fichiers .asm triés par taille décroissante : {len(head_asms)} fichiers")
 
+        # CHUNKING : Calculer et sélectionner le chunk
+        # Si chunk_size <= 0, traiter tous les fichiers en une seule fois
+        effective_chunk_size = chunk_size if chunk_size > 0 else 999999
+        chunk_info = ChunkInfo(len(head_asms), effective_chunk_size)
+        if use_chunking:
+            if chunk_index >= chunk_info.total_chunks:
+                logger.error(f"Index de chunk invalide: {chunk_index} >= {chunk_info.total_chunks}")
+                return
+            start_idx, end_idx = chunk_info.get_chunk_bounds(chunk_index)
+            chunk_head_asms = head_asms[start_idx:end_idx]
+            logger.info(f"Traitement du chunk {chunk_index + 1}/{chunk_info.total_chunks}: {len(chunk_head_asms)} fichiers")
+        else:
+            chunk_head_asms = head_asms
+
         # 2. Index Drawings (Important: always index for Multi-ASM)
         if progress_callback: progress_callback(5, 100, "Recherche des plans...")
         index_plans = dft_indexer.index_drawings(
-            seed_paths=head_asms, 
+            seed_paths=chunk_head_asms, 
             specific_folder=dft_folder or (input_path if is_folder_source else None), 
             mode=search_mode,
             callback_progress=lambda s, f, t: progress_callback(min(5 + (s // 100), 15), 100, f"Recherche... {f} plans trouvés") if progress_callback else None
@@ -134,8 +170,8 @@ class UnifiedMultiASMExportUseCase:
         # OPTIMISATION : Registre anti-redondance
         visited_asm_paths: Set[str] = set()
         
-        total_heads = len(head_asms)
-        for idx, head_path in enumerate(head_asms):
+        total_heads = len(chunk_head_asms)
+        for idx, head_path in enumerate(chunk_head_asms):
             if is_cancelled and is_cancelled(): break
             
             norm_head_path = os.path.normcase(os.path.abspath(head_path))
@@ -211,7 +247,7 @@ class UnifiedMultiASMExportUseCase:
             logger.success(f"Export Multi-ASM (Fichiers multiples) terminé dans : {output_name}")
 
         else:
-            # OUTPUT: Single Excel file with blocks
+            # OUTPUT: Single Excel file with blocks (or chunked files if chunking enabled)
             export_rows: List[ExportRow] = []
             self._order_counter = 1
             
@@ -234,11 +270,23 @@ class UnifiedMultiASMExportUseCase:
                 self._check_and_add_drawing(node, index_plans, processed_plans, export_rows)
 
             if progress_callback: progress_callback(95, 100, "Sauvegarde du fichier...")
-            full_output_path = os.path.join(output_dir, output_name)
-            if not full_output_path.lower().endswith(".xlsx"): full_output_path += ".xlsx"
+            
+            # Déterminer le chemin de sortie et le nom du fichier
+            if use_chunking:
+                # Créer un dossier pour les lots
+                full_export_dir = os.path.join(output_dir, output_name)
+                os.makedirs(full_export_dir, exist_ok=True)
+                # Nom du fichier avec numéro du lot (Ex: Lot_001.xlsx)
+                chunk_number = f"{chunk_index + 1:03d}"
+                full_output_path = os.path.join(full_export_dir, f"Lot_{chunk_number}.xlsx")
+                logger.info(f"Génération du fichier lot: {os.path.basename(full_output_path)}")
+            else:
+                full_output_path = os.path.join(output_dir, output_name)
+                if not full_output_path.lower().endswith(".xlsx"): full_output_path += ".xlsx"
+            
             excel_exporter.create_export(export_rows, full_output_path)
             
-            logger.success(f"Export Multi-ASM (Fichier unique) terminé : {output_name}")
+            logger.success(f"Export Multi-ASM (Fichier unique) terminé : {os.path.basename(full_output_path)}")
 
         if progress_callback: progress_callback(100, 100, "Extraction terminée !")
 
