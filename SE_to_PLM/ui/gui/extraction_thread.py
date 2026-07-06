@@ -21,7 +21,9 @@ class ExtractionThread(QThread):
                  dft_folder: str = None, search_mode: str = "les_deux", 
                  mode: str = "assembly", recursive: bool = False,
                  is_folder_source: bool = False, output_mode: str = "single",
-                 chunk_index: int = 0, chunk_size: int = -1):
+                 chunk_index: int = 0, chunk_size: int = -1,
+                 optimize_designations: bool = False,
+                 highlight_modifications: bool = False):
         super().__init__()
         self.input_path = input_path
         self.output_dir = output_dir
@@ -34,6 +36,8 @@ class ExtractionThread(QThread):
         self.output_mode = output_mode # "single" ou "multiple"
         self.chunk_index = chunk_index
         self.chunk_size = chunk_size
+        self.optimize_designations = optimize_designations
+        self.highlight_modifications = highlight_modifications
         self._is_cancelled = False
 
     def cancel(self):
@@ -64,7 +68,9 @@ class ExtractionThread(QThread):
                     dft_folder=self.dft_folder,
                     search_mode=self.search_mode,
                     progress_callback=self.progress_signal.emit,
-                    is_cancelled=self._check_cancelled
+                    is_cancelled=self._check_cancelled,
+                    optimize_designations=self.optimize_designations,
+                    highlight_modifications=self.highlight_modifications
                 )
             elif self.mode == "batch":
                 batch_export_use_case.execute(
@@ -75,7 +81,9 @@ class ExtractionThread(QThread):
                     dft_folder=self.dft_folder,
                     search_mode=self.search_mode,
                     progress_callback=self.progress_signal.emit,
-                    is_cancelled=self._check_cancelled
+                    is_cancelled=self._check_cancelled,
+                    optimize_designations=self.optimize_designations,
+                    highlight_modifications=self.highlight_modifications
                 )
             elif self.mode == "multi_asm":
                 unified_multi_asm_export_use_case.execute(
@@ -89,7 +97,9 @@ class ExtractionThread(QThread):
                     progress_callback=self.progress_signal.emit,
                     is_cancelled=self._check_cancelled,
                     chunk_size=self.chunk_size,
-                    chunk_index=self.chunk_index
+                    chunk_index=self.chunk_index,
+                    optimize_designations=self.optimize_designations,
+                    highlight_modifications=self.highlight_modifications
                 )
             
             if self._is_cancelled:

@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QLineEdit, QPushButton, QComboBox, QProgressBar, QTextEdit, 
     QFileDialog, QMessageBox, QGroupBox, QApplication, QTabWidget,
-    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider, QSpinBox
+    QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider, QSpinBox,
+    QTableWidget, QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCursor
@@ -65,6 +66,11 @@ class MainWindow(QMainWindow):
         self._setup_multi_asm_tab(self.tab_multi_asm)
         self.tabs.addTab(self._wrap_in_scroll_area(self.tab_multi_asm), "Multi-ASM")
 
+        # 1.4. Tab: Abbreviations (Dictionary)
+        self.tab_abbreviations = QWidget()
+        self._setup_abbreviations_tab(self.tab_abbreviations)
+        self.tabs.addTab(self.tab_abbreviations, "Dictionnaire d'abréviations")
+
         # 2. Output Group
         group_output = QGroupBox("Destination de l'export")
         out_layout = QVBoxLayout(group_output)
@@ -79,6 +85,19 @@ class MainWindow(QMainWindow):
         
         self.dest_label = QLabel(f"Dossier : {DEFAULT_EXPORT_DIR}")
         out_layout.addWidget(self.dest_label)
+        
+        opt_layout = QHBoxLayout()
+        self.cb_apply_abbreviation = QCheckBox("Optimiser les désignations (max 32 car.)")
+        self.cb_apply_abbreviation.setChecked(True)
+        self.cb_highlight_abbreviation = QCheckBox("Mettre en rouge les lignes modifiées")
+        self.cb_highlight_abbreviation.setChecked(True)
+        
+        self.cb_apply_abbreviation.toggled.connect(self.cb_highlight_abbreviation.setEnabled)
+        
+        opt_layout.addWidget(self.cb_apply_abbreviation)
+        opt_layout.addWidget(self.cb_highlight_abbreviation)
+        out_layout.addLayout(opt_layout)
+        
         top_layout.addWidget(group_output)
 
         # 3. Action & Progress
@@ -551,7 +570,9 @@ class MainWindow(QMainWindow):
             input_path=input_path, output_dir=str(DEFAULT_EXPORT_DIR), output_name=output_name,
             dft_folder=dft_edit.text(), search_mode=search_mode, mode=mode,
             recursive=recursive, is_folder_source=is_folder_source, output_mode=output_mode,
-            chunk_index=chunk_index, chunk_size=chunk_size
+            chunk_index=chunk_index, chunk_size=chunk_size,
+            optimize_designations=self.cb_apply_abbreviation.isChecked(),
+            highlight_modifications=self.cb_highlight_abbreviation.isChecked()
         )
         self._thread.progress_signal.connect(self._update_progress)
         self._thread.log_signal.connect(self._log)
@@ -577,7 +598,278 @@ class MainWindow(QMainWindow):
         if success: QMessageBox.information(self, "Succès", message)
         else: QMessageBox.information(self, "Info", message) if "annulée" in message else QMessageBox.critical(self, "Erreur", message)
 
+    def _setup_abbreviations_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
+        layout.setSpacing(10)
+        
+        # 1. Top Search and Action bar
+        top_bar = QHBoxLayout()
+        
+        self.abbrev_search = QLineEdit()
+        self.abbrev_search.setPlaceholderText("Rechercher un terme ou une abréviation...")
+        self.abbrev_search.textChanged.connect(self._filter_abbreviations)
+        top_bar.addWidget(self.abbrev_search, stretch=3)
+        
+        btn_add = QPushButton("Ajouter")
+        btn_add.clicked.connect(self._add_abbreviation)
+        top_bar.addWidget(btn_add)
+        
+        btn_delete = QPushButton("Supprimer")
+        btn_delete.clicked.connect(self._delete_abbreviation)
+        top_bar.addWidget(btn_delete)
+        
+        btn_save = QPushButton("Enregistrer")
+        btn_save.setObjectName("btn_save_abbrev")
+        btn_save.clicked.connect(self._save_abbreviations)
+        top_bar.addWidget(btn_save)
+        
+        layout.addLayout(top_bar)
+        
+        # 2. Main Table View
+        self.abbrev_table = QTableWidget()
+        self.abbrev_table.setColumnCount(3)
+        self.abbrev_table.setHorizontalHeaderLabels(["Terme original", "Abréviation PLM", "Priorité (1 à 3)"])
+        self.abbrev_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.abbrev_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.abbrev_table.itemChanged.connect(self._on_table_item_changed)
+        layout.addWidget(self.abbrev_table)
+        
+        # 3. Bottom Import/Export and Restore actions
+        bottom_bar = QHBoxLayout()
+        
+        btn_restore = QPushButton("Restaurer défauts")
+        btn_restore.clicked.connect(self._restore_default_abbreviations)
+        bottom_bar.addWidget(btn_restore)
+        
+        bottom_bar.addStretch()
+        
+        btn_export = QPushButton("Exporter vers Excel...")
+        btn_export.clicked.connect(self._export_abbreviations)
+        bottom_bar.addWidget(btn_export)
+        
+        btn_import = QPushButton("Importer Excel / ODS...")
+        btn_import.clicked.connect(self._import_abbreviations)
+        bottom_bar.addWidget(btn_import)
+        
+        layout.addLayout(bottom_bar)
+        
+        # Load the data
+        self._load_abbreviations_into_table()
+        
+        self.abbrev_table_changed = False
+
+    def _load_abbreviations_into_table(self):
+        from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+        self.abbrev_table.blockSignals(True)
+        self.abbrev_table.setRowCount(0)
+        
+        abbrevs = sorted(abbreviation_service.abbreviations, key=lambda x: x.get("terme", "").lower())
+        
+        for idx, item in enumerate(abbrevs):
+            self.abbrev_table.insertRow(idx)
+            
+            item_term = QTableWidgetItem(item.get("terme", ""))
+            item_abbrev = QTableWidgetItem(item.get("abreviation", ""))
+            item_priority = QTableWidgetItem(str(item.get("priorite", 2)))
+            
+            item_priority.setTextAlignment(Qt.AlignCenter)
+            
+            self.abbrev_table.setItem(idx, 0, item_term)
+            self.abbrev_table.setItem(idx, 1, item_abbrev)
+            self.abbrev_table.setItem(idx, 2, item_priority)
+            
+        self.abbrev_table.blockSignals(False)
+        self.abbrev_table_changed = False
+
+    def _filter_abbreviations(self, query):
+        query = query.strip().lower()
+        for row in range(self.abbrev_table.rowCount()):
+            term = self.abbrev_table.item(row, 0).text().lower()
+            abbrev = self.abbrev_table.item(row, 1).text().lower()
+            match = (query in term) or (query in abbrev)
+            self.abbrev_table.setRowHidden(row, not match)
+
+    def _on_table_item_changed(self, item):
+        self.abbrev_table_changed = True
+
+    def _add_abbreviation(self):
+        row_idx = self.abbrev_table.rowCount()
+        self.abbrev_table.blockSignals(True)
+        self.abbrev_table.insertRow(row_idx)
+        
+        item_term = QTableWidgetItem("")
+        item_abbrev = QTableWidgetItem("")
+        item_priority = QTableWidgetItem("2")
+        item_priority.setTextAlignment(Qt.AlignCenter)
+        
+        self.abbrev_table.setItem(row_idx, 0, item_term)
+        self.abbrev_table.setItem(row_idx, 1, item_abbrev)
+        self.abbrev_table.setItem(row_idx, 2, item_priority)
+        self.abbrev_table.blockSignals(False)
+        
+        self.abbrev_table.scrollToItem(item_term)
+        self.abbrev_table.setCurrentItem(item_term)
+        self.abbrev_table.editItem(item_term)
+        self.abbrev_table_changed = True
+
+    def _delete_abbreviation(self):
+        selected_ranges = self.abbrev_table.selectedRanges()
+        if not selected_ranges:
+            QMessageBox.warning(self, "Attention", "Veuillez sélectionner une ligne à supprimer.")
+            return
+            
+        rows_to_delete = sorted(list(set(row for r in selected_ranges for row in range(r.topRow(), r.bottomRow() + 1))), reverse=True)
+        
+        confirm = QMessageBox.question(
+            self, "Confirmation", 
+            f"Voulez-vous supprimer les {len(rows_to_delete)} abréviations sélectionnées ?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            self.abbrev_table.blockSignals(True)
+            for row in rows_to_delete:
+                self.abbrev_table.removeRow(row)
+            self.abbrev_table.blockSignals(False)
+            self.abbrev_table_changed = True
+
+    def _save_abbreviations(self):
+        from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+        abbrevs = []
+        for row in range(self.abbrev_table.rowCount()):
+            term_item = self.abbrev_table.item(row, 0)
+            abbrev_item = self.abbrev_table.item(row, 1)
+            priority_item = self.abbrev_table.item(row, 2)
+            
+            term = term_item.text().strip() if term_item else ""
+            abbrev = abbrev_item.text().strip() if abbrev_item else ""
+            priority_str = priority_item.text().strip() if priority_item else "2"
+            
+            if not term or not abbrev:
+                continue
+                
+            try:
+                priority = int(priority_str)
+                if priority not in [1, 2, 3]:
+                    priority = 2
+            except:
+                priority = 2
+                
+            abbrevs.append({
+                "terme": term,
+                "abreviation": abbrev,
+                "priorite": priority
+            })
+            
+        try:
+            abbreviation_service.save_abbreviations(abbrevs)
+            QMessageBox.information(self, "Succès", f"Dictionnaire d'abréviations enregistré ({len(abbrevs)} entrées).")
+            self.abbrev_table_changed = False
+            self._load_abbreviations_into_table()
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Impossible d'enregistrer : {e}")
+
+    def _restore_default_abbreviations(self):
+        confirm = QMessageBox.question(
+            self, "Confirmation", 
+            "Voulez-vous restaurer le dictionnaire aux valeurs d'origine ? Toutes les modifications locales seront perdues.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+            if abbreviation_service.json_path.exists():
+                try:
+                    os.remove(abbreviation_service.json_path)
+                except Exception as e:
+                    logger.error(f"Cannot delete JSON file: {e}")
+                    
+            from SE_to_PLM.app.bootstrap import bootstrap
+            bootstrap()
+            
+            self._load_abbreviations_into_table()
+            QMessageBox.information(self, "Succès", "Dictionnaire par défaut restauré avec succès.")
+
+    def _export_abbreviations(self):
+        file_path, _ = QFileDialog.getSaveFileName(self, "Exporter les abréviations", "dictionnaire_abreviations.xlsx", "Excel (*.xlsx)")
+        if file_path:
+            try:
+                self._save_abbreviations_temporary_list_to_service()
+                from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+                abbreviation_service.export_to_excel(file_path)
+                QMessageBox.information(self, "Succès", f"Exportation réussie dans :\n{file_path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Erreur", f"Échec de l'exportation : {e}")
+
+    def _save_abbreviations_temporary_list_to_service(self):
+        from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+        abbrevs = []
+        for row in range(self.abbrev_table.rowCount()):
+            term_item = self.abbrev_table.item(row, 0)
+            abbrev_item = self.abbrev_table.item(row, 1)
+            priority_item = self.abbrev_table.item(row, 2)
+            
+            term = term_item.text().strip() if term_item else ""
+            abbrev = abbrev_item.text().strip() if abbrev_item else ""
+            priority_str = priority_item.text().strip() if priority_item else "2"
+            
+            if not term or not abbrev:
+                continue
+            try:
+                priority = int(priority_str)
+            except:
+                priority = 2
+            abbrevs.append({
+                "terme": term,
+                "abreviation": abbrev,
+                "priorite": priority
+            })
+        abbreviation_service.save_abbreviations(abbrevs)
+
+    def _import_abbreviations(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Importer les abréviations", "", "Feuille de calcul (*.xlsx *.ods)")
+        if file_path:
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Mode d'importation")
+            msg_box.setText("Comment souhaitez-vous importer les abréviations ?")
+            btn_merge = msg_box.addButton("Fusionner avec l'existant", QMessageBox.YesRole)
+            btn_replace = msg_box.addButton("Remplacer complètement", QMessageBox.NoRole)
+            btn_cancel = msg_box.addButton("Annuler", QMessageBox.RejectRole)
+            
+            msg_box.exec_()
+            
+            if msg_box.clickedButton() == btn_cancel:
+                return
+                
+            mode = "merge" if msg_box.clickedButton() == btn_merge else "replace"
+            
+            try:
+                from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+                nb_imported = abbreviation_service.import_from_excel_or_ods(file_path, mode=mode)
+                
+                self._load_abbreviations_into_table()
+                
+                QMessageBox.information(
+                    self, "Succès", 
+                    f"Importation terminée avec succès !\n{nb_imported} abréviations chargées ({'fusionnées' if mode == 'merge' else 'remplacées'})."
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Erreur", f"Échec de l'importation : {e}")
+
     def closeEvent(self, event):
+        if hasattr(self, 'abbrev_table_changed') and self.abbrev_table_changed:
+            reply_save = QMessageBox.question(
+                self, "Enregistrer les modifications ?",
+                "Vous avez des modifications non enregistrées dans le dictionnaire d'abréviations. Voulez-vous les enregistrer avant de quitter ?",
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes
+            )
+            if reply_save == QMessageBox.Cancel:
+                event.ignore()
+                return
+            elif reply_save == QMessageBox.Yes:
+                self._save_abbreviations()
+                
         reply = QMessageBox.question(
             self, 
             "Quitter l'application", 
@@ -589,11 +881,9 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.Cancel:
             event.ignore()
         elif reply == QMessageBox.Yes:
-            # L'utilisateur a choisi de fermer Solid Edge
             connection_manager.quit()
             event.accept()
         else:
-            # L'utilisateur ferme juste l'appli
             event.accept()
 
 if __name__ == "__main__":

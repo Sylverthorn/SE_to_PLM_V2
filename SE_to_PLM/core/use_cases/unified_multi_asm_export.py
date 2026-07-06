@@ -101,7 +101,9 @@ class UnifiedMultiASMExportUseCase:
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
         is_cancelled: Optional[Callable[[], bool]] = None,
         chunk_size: int = 100,
-        chunk_index: int = 0
+        chunk_index: int = 0,
+        optimize_designations: bool = False,
+        highlight_modifications: bool = False
     ):
         self._order_counter = 1
         source_type = "dossier" if is_folder_source else "fichier"
@@ -243,7 +245,12 @@ class UnifiedMultiASMExportUseCase:
                     self._check_and_add_drawing(child, index_plans, processed_plans, rows)
                 
                 excel_path = os.path.join(full_export_path, f"{asm_node.cad_file.name_without_extension}.xlsx")
-                excel_exporter.create_export(rows, excel_path)
+                excel_exporter.create_export(
+                    rows, 
+                    excel_path,
+                    optimize_designations=optimize_designations,
+                    highlight_modifications=highlight_modifications
+                )
             
             logger.success(f"Export Multi-ASM (Fichiers multiples) terminé dans : {output_name}")
 
@@ -285,7 +292,12 @@ class UnifiedMultiASMExportUseCase:
                 full_output_path = os.path.join(output_dir, output_name)
                 if not full_output_path.lower().endswith(".xlsx"): full_output_path += ".xlsx"
             
-            excel_exporter.create_export(export_rows, full_output_path)
+            excel_exporter.create_export(
+                export_rows, 
+                full_output_path,
+                optimize_designations=optimize_designations,
+                highlight_modifications=highlight_modifications
+            )
             
             logger.success(f"Export Multi-ASM (Fichier unique) terminé : {os.path.basename(full_output_path)}")
 

@@ -1,0 +1,1137 @@
+[
+  {
+    "terme": "Afficheur",
+    "abreviation": "AFF",
+    "priorite": 2
+  },
+  {
+    "terme": "Aimant",
+    "abreviation": "AIM",
+    "priorite": 2
+  },
+  {
+    "terme": "Alimentation",
+    "abreviation": "ALIM",
+    "priorite": 2
+  },
+  {
+    "terme": "Aluminium",
+    "abreviation": "ALU",
+    "priorite": 2
+  },
+  {
+    "terme": "Amovible",
+    "abreviation": "AMOV",
+    "priorite": 2
+  },
+  {
+    "terme": "Annulaire",
+    "abreviation": "ANN",
+    "priorite": 2
+  },
+  {
+    "terme": "API",
+    "abreviation": "API",
+    "priorite": 2
+  },
+  {
+    "terme": "Arbre",
+    "abreviation": "ARB",
+    "priorite": 2
+  },
+  {
+    "terme": "Armoire",
+    "abreviation": "ARM",
+    "priorite": 2
+  },
+  {
+    "terme": "Arrière",
+    "abreviation": "AR",
+    "priorite": 2
+  },
+  {
+    "terme": "Arrêt d'urgence",
+    "abreviation": "AU",
+    "priorite": 2
+  },
+  {
+    "terme": "Assemblé",
+    "abreviation": "ASM",
+    "priorite": 2
+  },
+  {
+    "terme": "Automate",
+    "abreviation": "AUTO",
+    "priorite": 2
+  },
+  {
+    "terme": "Avant",
+    "abreviation": "AV",
+    "priorite": 2
+  },
+  {
+    "terme": "Axe",
+    "abreviation": "AX",
+    "priorite": 2
+  },
+  {
+    "terme": "Bac",
+    "abreviation": "BAC",
+    "priorite": 2
+  },
+  {
+    "terme": "Bague",
+    "abreviation": "BG",
+    "priorite": 2
+  },
+  {
+    "terme": "Bandeau(x)",
+    "abreviation": "BAND",
+    "priorite": 3
+  },
+  {
+    "terme": "Basculement",
+    "abreviation": "BASC",
+    "priorite": 1
+  },
+  {
+    "terme": "Bielle",
+    "abreviation": "BIEL",
+    "priorite": 2
+  },
+  {
+    "terme": "Biellette",
+    "abreviation": "BIELT",
+    "priorite": 2
+  },
+  {
+    "terme": "Bille",
+    "abreviation": "BIL",
+    "priorite": 2
+  },
+  {
+    "terme": "Bloc",
+    "abreviation": "BLK",
+    "priorite": 2
+  },
+  {
+    "terme": "Bobine",
+    "abreviation": "BOB",
+    "priorite": 2
+  },
+  {
+    "terme": "Borne",
+    "abreviation": "BOR",
+    "priorite": 2
+  },
+  {
+    "terme": "Bornier",
+    "abreviation": "BORN",
+    "priorite": 2
+  },
+  {
+    "terme": "Bouchage",
+    "abreviation": "BOUCH",
+    "priorite": 1
+  },
+  {
+    "terme": "Boucheuse(s)",
+    "abreviation": "BOUC",
+    "priorite": 1
+  },
+  {
+    "terme": "Bouchon",
+    "abreviation": "BCH",
+    "priorite": 1
+  },
+  {
+    "terme": "Bout plat",
+    "abreviation": "BP",
+    "priorite": 2
+  },
+  {
+    "terme": "Bouton",
+    "abreviation": "BTN",
+    "priorite": 2
+  },
+  {
+    "terme": "Boîtier",
+    "abreviation": "BOIT",
+    "priorite": 2
+  },
+  {
+    "terme": "Bras",
+    "abreviation": "BR",
+    "priorite": 2
+  },
+  {
+    "terme": "Brushless",
+    "abreviation": "BLDC",
+    "priorite": 2
+  },
+  {
+    "terme": "Butée",
+    "abreviation": "BUT",
+    "priorite": 2
+  },
+  {
+    "terme": "Cable",
+    "abreviation": "CAB",
+    "priorite": 2
+  },
+  {
+    "terme": "cache",
+    "abreviation": "cach",
+    "priorite": 2
+  },
+  {
+    "terme": "Cadre",
+    "abreviation": "CAD",
+    "priorite": 2
+  },
+  {
+    "terme": "Came",
+    "abreviation": "CAM",
+    "priorite": 2
+  },
+  {
+    "terme": "Capot",
+    "abreviation": "CAP",
+    "priorite": 2
+  },
+  {
+    "terme": "Capsuleuse",
+    "abreviation": "CAPS",
+    "priorite": 2
+  },
+  {
+    "terme": "Capteur",
+    "abreviation": "CAPT",
+    "priorite": 2
+  },
+  {
+    "terme": "Carte",
+    "abreviation": "CRT",
+    "priorite": 2
+  },
+  {
+    "terme": "Centrale(s)",
+    "abreviation": "CENT",
+    "priorite": 2
+  },
+  {
+    "terme": "Charnière",
+    "abreviation": "CHARN",
+    "priorite": 2
+  },
+  {
+    "terme": "Chassis",
+    "abreviation": "CH",
+    "priorite": 1
+  },
+  {
+    "terme": "Châssis",
+    "abreviation": "CH",
+    "priorite": 1
+  },
+  {
+    "terme": "Circlips",
+    "abreviation": "CIR",
+    "priorite": 2
+  },
+  {
+    "terme": "Circuit imprimé",
+    "abreviation": "CII",
+    "priorite": 2
+  },
+  {
+    "terme": "Clavette",
+    "abreviation": "CLAV",
+    "priorite": 2
+  },
+  {
+    "terme": "Codeur",
+    "abreviation": "COD",
+    "priorite": 2
+  },
+  {
+    "terme": "Coffret",
+    "abreviation": "COFF",
+    "priorite": 2
+  },
+  {
+    "terme": "Colonne",
+    "abreviation": "COL",
+    "priorite": 1
+  },
+  {
+    "terme": "Commande",
+    "abreviation": "CMD",
+    "priorite": 2
+  },
+  {
+    "terme": "Complet",
+    "abreviation": "CPL",
+    "priorite": 2
+  },
+  {
+    "terme": "Compresseur",
+    "abreviation": "COMP",
+    "priorite": 2
+  },
+  {
+    "terme": "Connecteur",
+    "abreviation": "CONN",
+    "priorite": 2
+  },
+  {
+    "terme": "Contacteur",
+    "abreviation": "CONT",
+    "priorite": 2
+  },
+  {
+    "terme": "Convertisseur",
+    "abreviation": "CONV",
+    "priorite": 2
+  },
+  {
+    "terme": "Cornière",
+    "abreviation": "CORN",
+    "priorite": 2
+  },
+  {
+    "terme": "Corps",
+    "abreviation": "CPS",
+    "priorite": 2
+  },
+  {
+    "terme": "Couronne",
+    "abreviation": "CRN",
+    "priorite": 2
+  },
+  {
+    "terme": "Courroie",
+    "abreviation": "COUR",
+    "priorite": 2
+  },
+  {
+    "terme": "Couvercle",
+    "abreviation": "COUV",
+    "priorite": 2
+  },
+  {
+    "terme": "Couvercle(s)",
+    "abreviation": "COUV",
+    "priorite": 3
+  },
+  {
+    "terme": "Crantée",
+    "abreviation": "CRANT",
+    "priorite": 2
+  },
+  {
+    "terme": "Câble",
+    "abreviation": "CAB",
+    "priorite": 2
+  },
+  {
+    "terme": "Cône",
+    "abreviation": "CNE",
+    "priorite": 2
+  },
+  {
+    "terme": "Descente(s)",
+    "abreviation": "DESC",
+    "priorite": 2
+  },
+  {
+    "terme": "Dessous",
+    "abreviation": "DSO",
+    "priorite": 2
+  },
+  {
+    "terme": "Dessus",
+    "abreviation": "DSU",
+    "priorite": 2
+  },
+  {
+    "terme": "Diamètre",
+    "abreviation": "Ø",
+    "priorite": 2
+  },
+  {
+    "terme": "Diffuseur",
+    "abreviation": "DIFFU",
+    "priorite": 2
+  },
+  {
+    "terme": "Différentiel",
+    "abreviation": "DIFF",
+    "priorite": 2
+  },
+  {
+    "terme": "Disjoncteur",
+    "abreviation": "DISJ",
+    "priorite": 2
+  },
+  {
+    "terme": "Disque",
+    "abreviation": "DISQ",
+    "priorite": 2
+  },
+  {
+    "terme": "Dissipateur",
+    "abreviation": "DISS",
+    "priorite": 2
+  },
+  {
+    "terme": "Distribution",
+    "abreviation": "DIST",
+    "priorite": 1
+  },
+  {
+    "terme": "Doigt",
+    "abreviation": "DGT",
+    "priorite": 2
+  },
+  {
+    "terme": "Douille",
+    "abreviation": "DOU",
+    "priorite": 2
+  },
+  {
+    "terme": "Droit",
+    "abreviation": "DROI",
+    "priorite": 2
+  },
+  {
+    "terme": "Décalage",
+    "abreviation": "DEC",
+    "priorite": 2
+  },
+  {
+    "terme": "Déclencheur",
+    "abreviation": "DECL",
+    "priorite": 2
+  },
+  {
+    "terme": "Détecteur",
+    "abreviation": "DET",
+    "priorite": 2
+  },
+  {
+    "terme": "Embase",
+    "abreviation": "EMB",
+    "priorite": 2
+  },
+  {
+    "terme": "Enfoncement(s)",
+    "abreviation": "ENF",
+    "priorite": 2
+  },
+  {
+    "terme": "Ensemble",
+    "abreviation": "ENS",
+    "priorite": 1
+  },
+  {
+    "terme": "Entraînement",
+    "abreviation": "ENTRN",
+    "priorite": 2
+  },
+  {
+    "terme": "Entretoise",
+    "abreviation": "ENTR",
+    "priorite": 2
+  },
+  {
+    "terme": "Entrée",
+    "abreviation": "ENT",
+    "priorite": 2
+  },
+  {
+    "terme": "Extension",
+    "abreviation": "EXTN",
+    "priorite": 2
+  },
+  {
+    "terme": "Extérieur / Extérieure",
+    "abreviation": "EXT",
+    "priorite": 2
+  },
+  {
+    "terme": "Faisceau",
+    "abreviation": "FAIS",
+    "priorite": 2
+  },
+  {
+    "terme": "Fermeture",
+    "abreviation": "FERM",
+    "priorite": 2
+  },
+  {
+    "terme": "Filtre",
+    "abreviation": "FILT",
+    "priorite": 2
+  },
+  {
+    "terme": "Fixation",
+    "abreviation": "FIX",
+    "priorite": 1
+  },
+  {
+    "terme": "Fonction",
+    "abreviation": "FCT",
+    "priorite": 2
+  },
+  {
+    "terme": "Fond",
+    "abreviation": "FOND",
+    "priorite": 2
+  },
+  {
+    "terme": "Fourreau",
+    "abreviation": "FOUR",
+    "priorite": 2
+  },
+  {
+    "terme": "Galet",
+    "abreviation": "GAL",
+    "priorite": 2
+  },
+  {
+    "terme": "Garniture",
+    "abreviation": "GARN",
+    "priorite": 2
+  },
+  {
+    "terme": "Gauche",
+    "abreviation": "GAU",
+    "priorite": 2
+  },
+  {
+    "terme": "Glissement(s)",
+    "abreviation": "GLIS",
+    "priorite": 2
+  },
+  {
+    "terme": "Goulotte",
+    "abreviation": "GOUL",
+    "priorite": 2
+  },
+  {
+    "terme": "Goupille",
+    "abreviation": "GOUP",
+    "priorite": 2
+  },
+  {
+    "terme": "Goupillé",
+    "abreviation": "GOUP",
+    "priorite": 2
+  },
+  {
+    "terme": "Gravée",
+    "abreviation": "GRAV",
+    "priorite": 2
+  },
+  {
+    "terme": "Grille",
+    "abreviation": "GRIL",
+    "priorite": 2
+  },
+  {
+    "terme": "Groupe",
+    "abreviation": "GRP",
+    "priorite": 2
+  },
+  {
+    "terme": "Guidage",
+    "abreviation": "GUIDG",
+    "priorite": 2
+  },
+  {
+    "terme": "Guide",
+    "abreviation": "GUID",
+    "priorite": 2
+  },
+  {
+    "terme": "Habillage(s)",
+    "abreviation": "HABIL",
+    "priorite": 3
+  },
+  {
+    "terme": "Hall",
+    "abreviation": "HALL",
+    "priorite": 2
+  },
+  {
+    "terme": "Hauteur",
+    "abreviation": "HT",
+    "priorite": 2
+  },
+  {
+    "terme": "High Top",
+    "abreviation": "HTP",
+    "priorite": 1
+  },
+  {
+    "terme": "Horizontal",
+    "abreviation": "HOR",
+    "priorite": 2
+  },
+  {
+    "terme": "Inductif",
+    "abreviation": "INDUC",
+    "priorite": 2
+  },
+  {
+    "terme": "Inférieur / Inférieure",
+    "abreviation": "INF",
+    "priorite": 2
+  },
+  {
+    "terme": "Injection",
+    "abreviation": "INJ",
+    "priorite": 2
+  },
+  {
+    "terme": "Insert",
+    "abreviation": "INS",
+    "priorite": 2
+  },
+  {
+    "terme": "Inter-châssis",
+    "abreviation": "ICH",
+    "priorite": 2
+  },
+  {
+    "terme": "Interface",
+    "abreviation": "IF",
+    "priorite": 2
+  },
+  {
+    "terme": "Intermédiaire",
+    "abreviation": "INTM",
+    "priorite": 2
+  },
+  {
+    "terme": "Interrupteur",
+    "abreviation": "INTERR",
+    "priorite": 2
+  },
+  {
+    "terme": "Intérieur / intérieure",
+    "abreviation": "INT",
+    "priorite": 2
+  },
+  {
+    "terme": "Jaune/Noir",
+    "abreviation": "J/N",
+    "priorite": 2
+  },
+  {
+    "terme": "Joint",
+    "abreviation": "JNT",
+    "priorite": 2
+  },
+  {
+    "terme": "Joints",
+    "abreviation": "JNT",
+    "priorite": 2
+  },
+  {
+    "terme": "Jonction",
+    "abreviation": "JONC",
+    "priorite": 2
+  },
+  {
+    "terme": "Latéral",
+    "abreviation": "LAT",
+    "priorite": 2
+  },
+  {
+    "terme": "Levier",
+    "abreviation": "LEV",
+    "priorite": 2
+  },
+  {
+    "terme": "Longeron",
+    "abreviation": "LONG",
+    "priorite": 2
+  },
+  {
+    "terme": "Longitudinal",
+    "abreviation": "LONGI",
+    "priorite": 2
+  },
+  {
+    "terme": "Longue",
+    "abreviation": "LG",
+    "priorite": 2
+  },
+  {
+    "terme": "Magasin",
+    "abreviation": "MAG",
+    "priorite": 2
+  },
+  {
+    "terme": "Manomètre",
+    "abreviation": "MANO",
+    "priorite": 2
+  },
+  {
+    "terme": "Modelisation",
+    "abreviation": "MODL",
+    "priorite": 2
+  },
+  {
+    "terme": "Module",
+    "abreviation": "MOD",
+    "priorite": 2
+  },
+  {
+    "terme": "Monté",
+    "abreviation": "MONT",
+    "priorite": 2
+  },
+  {
+    "terme": "Moteur",
+    "abreviation": "MOT",
+    "priorite": 2
+  },
+  {
+    "terme": "Motoréducteur",
+    "abreviation": "MR",
+    "priorite": 1
+  },
+  {
+    "terme": "Niveau",
+    "abreviation": "NIV",
+    "priorite": 2
+  },
+  {
+    "terme": "Noir",
+    "abreviation": "NR",
+    "priorite": 2
+  },
+  {
+    "terme": "Oméga",
+    "abreviation": "OMG",
+    "priorite": 2
+  },
+  {
+    "terme": "Option(s)",
+    "abreviation": "OPT",
+    "priorite": 3
+  },
+  {
+    "terme": "Palier",
+    "abreviation": "PAL",
+    "priorite": 2
+  },
+  {
+    "terme": "Panneau",
+    "abreviation": "PAN",
+    "priorite": 2
+  },
+  {
+    "terme": "Panneau(x)",
+    "abreviation": "PAN",
+    "priorite": 2
+  },
+  {
+    "terme": "Passe-fil",
+    "abreviation": "PF",
+    "priorite": 2
+  },
+  {
+    "terme": "Patte",
+    "abreviation": "PAT",
+    "priorite": 2
+  },
+  {
+    "terme": "Peigne",
+    "abreviation": "PEI",
+    "priorite": 2
+  },
+  {
+    "terme": "Pied",
+    "abreviation": "PD",
+    "priorite": 2
+  },
+  {
+    "terme": "Piste",
+    "abreviation": "PST",
+    "priorite": 2
+  },
+  {
+    "terme": "Pivotement",
+    "abreviation": "PIV",
+    "priorite": 1
+  },
+  {
+    "terme": "Plaque",
+    "abreviation": "PLQ",
+    "priorite": 2
+  },
+  {
+    "terme": "Plaquette",
+    "abreviation": "PLAQ",
+    "priorite": 2
+  },
+  {
+    "terme": "Plat",
+    "abreviation": "PLAT",
+    "priorite": 2
+  },
+  {
+    "terme": "Platine",
+    "abreviation": "PLAT",
+    "priorite": 2
+  },
+  {
+    "terme": "Plexiglas / Plexi",
+    "abreviation": "PLX",
+    "priorite": 2
+  },
+  {
+    "terme": "Plot",
+    "abreviation": "PLT",
+    "priorite": 2
+  },
+  {
+    "terme": "Portière",
+    "abreviation": "PORT",
+    "priorite": 2
+  },
+  {
+    "terme": "Poteau",
+    "abreviation": "POT",
+    "priorite": 2
+  },
+  {
+    "terme": "Potentiomètre",
+    "abreviation": "POTAR",
+    "priorite": 2
+  },
+  {
+    "terme": "Poulie",
+    "abreviation": "POUL",
+    "priorite": 2
+  },
+  {
+    "terme": "Poussoir",
+    "abreviation": "POUS",
+    "priorite": 2
+  },
+  {
+    "terme": "Prise",
+    "abreviation": "PRIS",
+    "priorite": 2
+  },
+  {
+    "terme": "Profil",
+    "abreviation": "PROF",
+    "priorite": 2
+  },
+  {
+    "terme": "Protection",
+    "abreviation": "PROT",
+    "priorite": 2
+  },
+  {
+    "terme": "Prémonté",
+    "abreviation": "PMT",
+    "priorite": 2
+  },
+  {
+    "terme": "Pupitre",
+    "abreviation": "PUP",
+    "priorite": 2
+  },
+  {
+    "terme": "Raccord",
+    "abreviation": "RAC",
+    "priorite": 2
+  },
+  {
+    "terme": "Rail",
+    "abreviation": "RAIL",
+    "priorite": 2
+  },
+  {
+    "terme": "Rallonge",
+    "abreviation": "RAL",
+    "priorite": 2
+  },
+  {
+    "terme": "Rampe",
+    "abreviation": "RAMP",
+    "priorite": 2
+  },
+  {
+    "terme": "Reducteur",
+    "abreviation": "RED",
+    "priorite": 1
+  },
+  {
+    "terme": "Renfort",
+    "abreviation": "RENF",
+    "priorite": 2
+  },
+  {
+    "terme": "Renvoi",
+    "abreviation": "RENV",
+    "priorite": 2
+  },
+  {
+    "terme": "Repérage",
+    "abreviation": "REPER",
+    "priorite": 2
+  },
+  {
+    "terme": "Ressort",
+    "abreviation": "RES",
+    "priorite": 2
+  },
+  {
+    "terme": "Rinceuse",
+    "abreviation": "RINC",
+    "priorite": 1
+  },
+  {
+    "terme": "Rinçage",
+    "abreviation": "RINCG",
+    "priorite": 2
+  },
+  {
+    "terme": "Rondelle(s)",
+    "abreviation": "RDL",
+    "priorite": 2
+  },
+  {
+    "terme": "Rotatif",
+    "abreviation": "ROTAT",
+    "priorite": 2
+  },
+  {
+    "terme": "Rotor",
+    "abreviation": "RTR",
+    "priorite": 2
+  },
+  {
+    "terme": "Rotule",
+    "abreviation": "ROT",
+    "priorite": 2
+  },
+  {
+    "terme": "Roulement",
+    "abreviation": "RLT",
+    "priorite": 2
+  },
+  {
+    "terme": "Roulette",
+    "abreviation": "ROUL",
+    "priorite": 2
+  },
+  {
+    "terme": "Réception",
+    "abreviation": "RECP",
+    "priorite": 2
+  },
+  {
+    "terme": "Réglage",
+    "abreviation": "REGL",
+    "priorite": 2
+  },
+  {
+    "terme": "Répartiteur",
+    "abreviation": "REP",
+    "priorite": 2
+  },
+  {
+    "terme": "Résine",
+    "abreviation": "RESI",
+    "priorite": 2
+  },
+  {
+    "terme": "Sans tête",
+    "abreviation": "ST",
+    "priorite": 2
+  },
+  {
+    "terme": "Semelle",
+    "abreviation": "SEM",
+    "priorite": 2
+  },
+  {
+    "terme": "Servo-moteur",
+    "abreviation": "SM",
+    "priorite": 2
+  },
+  {
+    "terme": "Socle",
+    "abreviation": "SOC",
+    "priorite": 2
+  },
+  {
+    "terme": "Sortie",
+    "abreviation": "SORT",
+    "priorite": 2
+  },
+  {
+    "terme": "Stabilisée",
+    "abreviation": "STAB",
+    "priorite": 2
+  },
+  {
+    "terme": "Standard",
+    "abreviation": "STD",
+    "priorite": 2
+  },
+  {
+    "terme": "Structure",
+    "abreviation": "STR",
+    "priorite": 2
+  },
+  {
+    "terme": "Support(s)",
+    "abreviation": "SUPP",
+    "priorite": 2
+  },
+  {
+    "terme": "Supérieure(s)",
+    "abreviation": "SUP",
+    "priorite": 2
+  },
+  {
+    "terme": "Surmoulé",
+    "abreviation": "SURM",
+    "priorite": 2
+  },
+  {
+    "terme": "Symétrique",
+    "abreviation": "SYM",
+    "priorite": 2
+  },
+  {
+    "terme": "Sécurité",
+    "abreviation": "SEC",
+    "priorite": 2
+  },
+  {
+    "terme": "Séparation",
+    "abreviation": "SEP",
+    "priorite": 2
+  },
+  {
+    "terme": "Tendeur",
+    "abreviation": "TEND",
+    "priorite": 2
+  },
+  {
+    "terme": "TETE BOIS / TÊTE BOIS",
+    "abreviation": "TB",
+    "priorite": 1
+  },
+  {
+    "terme": "Tireuse",
+    "abreviation": "TIR",
+    "priorite": 1
+  },
+  {
+    "terme": "Transformateur",
+    "abreviation": "TRANSFO",
+    "priorite": 2
+  },
+  {
+    "terme": "Transporteur",
+    "abreviation": "TRANSP",
+    "priorite": 2
+  },
+  {
+    "terme": "Traverse(s)",
+    "abreviation": "TRAV",
+    "priorite": 2
+  },
+  {
+    "terme": "Tube",
+    "abreviation": "TUB",
+    "priorite": 2
+  },
+  {
+    "terme": "Tôle",
+    "abreviation": "TOL",
+    "priorite": 2
+  },
+  {
+    "terme": "Variateur",
+    "abreviation": "VAR",
+    "priorite": 2
+  },
+  {
+    "terme": "Ventilateur",
+    "abreviation": "VENT",
+    "priorite": 2
+  },
+  {
+    "terme": "Verrou",
+    "abreviation": "VER",
+    "priorite": 2
+  },
+  {
+    "terme": "Vertical",
+    "abreviation": "VERT",
+    "priorite": 2
+  },
+  {
+    "terme": "Verticale",
+    "abreviation": "VERT",
+    "priorite": 2
+  },
+  {
+    "terme": "Voyant",
+    "abreviation": "VOY",
+    "priorite": 2
+  },
+  {
+    "terme": "Écoulement",
+    "abreviation": "ECOU",
+    "priorite": 1
+  },
+  {
+    "terme": "Égalisation",
+    "abreviation": "EGAL",
+    "priorite": 2
+  },
+  {
+    "terme": "Électrique",
+    "abreviation": "ELEC",
+    "priorite": 2
+  },
+  {
+    "terme": "Électrovanne",
+    "abreviation": "EV",
+    "priorite": 2
+  },
+  {
+    "terme": "Équerre",
+    "abreviation": "EQR",
+    "priorite": 2
+  },
+  {
+    "terme": "Étiquette",
+    "abreviation": "ETIQ",
+    "priorite": 2
+  },
+  {
+    "terme": "Étoile",
+    "abreviation": "ETO",
+    "priorite": 2
+  },
+  {
+    "terme": "palette",
+    "abreviation": "PAL",
+    "priorite": 2
+  }
+]

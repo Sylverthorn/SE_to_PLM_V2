@@ -85,7 +85,9 @@ class BatchExportUseCase:
         dft_folder: Optional[str] = None,
         search_mode: str = "les_deux",
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
-        is_cancelled: Optional[Callable[[], bool]] = None
+        is_cancelled: Optional[Callable[[], bool]] = None,
+        optimize_designations: bool = False,
+        highlight_modifications: bool = False
     ):
         self._order_counter = 1
         logger.info(f"Début de l'extraction par lot pour : {input_dir}")
@@ -206,7 +208,12 @@ class BatchExportUseCase:
         # 4. Export to Excel
         if progress_callback: progress_callback(90, 100, "Génération du fichier Excel...")
         full_output_path = os.path.join(output_dir, output_name)
-        excel_exporter.create_export(export_rows, full_output_path)
+        excel_exporter.create_export(
+            export_rows, 
+            full_output_path, 
+            optimize_designations=optimize_designations, 
+            highlight_modifications=highlight_modifications
+        )
 
         if progress_callback: progress_callback(100, 100, "Extraction terminée !")
         logger.success(f"Export par lot réussi : {output_name}")

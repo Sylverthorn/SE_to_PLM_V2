@@ -31,14 +31,54 @@ def test_excel_generation(tmp_path):
     
     assert os.path.exists(output_file)
     
-    # Verify content
     wb = load_workbook(output_file)
     ws = wb.active
     assert ws.title == "Structure"
     assert ws.cell(row=1, column=1).value == "Level"
+    assert ws.cell(row=1, column=13).value == "designation"
+    assert ws.cell(row=1, column=14).value == "designation_erp"
+    
     assert ws.cell(row=2, column=6).value == "Root"
     assert ws.cell(row=3, column=6).value == "Part1"
     assert ws.cell(row=3, column=4).value == 2 # quantity
+    
+    # Without optimization: both should have the original designation
+    assert ws.cell(row=2, column=13).value == "Top Assy"
+    assert ws.cell(row=2, column=14).value == "Top Assy"
+    
+    # Test with optimization
+    output_file_opt = str(tmp_path / "test_export_opt.xlsx")
+    
+    # Change designation to be long so that it triggers abbreviation and truncation
+    rows[1].designation = "Simple Part with a very long designation name that exceeds 32 characters"
+    
+    # Let's mock abbreviation rules for testing
+    from SE_to_PLM.core.services.plm.abbreviation_service import abbreviation_service
+    original_abbrevs = list(abbreviation_service.abbreviations)
+    
+    try:
+        abbreviation_service.save_abbreviations([
+            {"terme": "Simple", "abreviation": "SMP", "priorite": 2}
+        ])
+        
+        exporter.create_export(rows, output_file_opt, optimize_designations=True)
+        
+        wb_opt = load_workbook(output_file_opt)
+        ws_opt = wb_opt.active
+        
+        # Original designation must remain unchanged in the designation column (col 13)
+        assert ws_opt.cell(row=3, column=13).value == "Simple Part with a very long designation name that exceeds 32 characters"
+        # designation_erp (col 14) must contain the optimized value (uppercase, sans accent, abbreviated and truncated)
+        assert ws_opt.cell(row=3, column=14).value == "SMP PART WITH A VERY LONG"
+        
+        # Let's also check row 2 (short designation "Top Assy" under 32 chars)
+        # Original designation remains unchanged
+        assert ws_opt.cell(row=2, column=13).value == "Top Assy"
+        # designation_erp contains uppercase sans accents version
+        assert ws_opt.cell(row=2, column=14).value == "TOP ASSY"
+    finally:
+        # Always restore main abbreviations list
+        abbreviation_service.save_abbreviations(original_abbrevs)
     
     # Verify some styling (limited check)
     assert ws.cell(row=1, column=1).font.bold is True
