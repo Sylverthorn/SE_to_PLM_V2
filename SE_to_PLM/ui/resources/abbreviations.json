@@ -725,6 +725,11 @@
     "priorite": 3
   },
   {
+    "terme": "palette",
+    "abreviation": "PAL",
+    "priorite": 2
+  },
+  {
     "terme": "Palier",
     "abreviation": "PAL",
     "priorite": 2
@@ -1127,11 +1132,6 @@
   {
     "terme": "Étoile",
     "abreviation": "ETO",
-    "priorite": 2
-  },
-  {
-    "terme": "palette",
-    "abreviation": "PAL",
     "priorite": 2
   }
 ]

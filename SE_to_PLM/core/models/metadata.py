@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Dict, Any
 
 @dataclass
 class Metadata:
@@ -12,6 +13,7 @@ class Metadata:
     matiere: str = ""
     densite: str = ""
     dia_se: str = ""
+    custom_properties: Dict[str, Any] = field(default_factory=dict)
     
     @classmethod
     def default(cls) -> "Metadata":

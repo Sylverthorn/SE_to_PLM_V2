@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 from datetime import datetime
 from pathlib import Path
 from PyQt5.QtWidgets import (
@@ -7,10 +8,10 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QComboBox, QProgressBar, QTextEdit, 
     QFileDialog, QMessageBox, QGroupBox, QApplication, QTabWidget,
     QCheckBox, QRadioButton, QButtonGroup, QSplitter, QScrollArea, QSlider, QSpinBox,
-    QTableWidget, QTableWidgetItem, QHeaderView
+    QTableWidget, QTableWidgetItem, QHeaderView, QStyle
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextCursor
+from PyQt5.QtGui import QTextCursor, QColor, QIcon
 
 from SE_to_PLM.ui.gui.extraction_thread import ExtractionThread
 from SE_to_PLM.app.constants import DEFAULT_EXPORT_DIR, SEARCH_MODE_BOTH, SEARCH_MODE_ARBO, SEARCH_MODE_SPECIFIC
@@ -66,10 +67,12 @@ class MainWindow(QMainWindow):
         self._setup_multi_asm_tab(self.tab_multi_asm)
         self.tabs.addTab(self._wrap_in_scroll_area(self.tab_multi_asm), "Multi-ASM")
 
-        # 1.4. Tab: Abbreviations (Dictionary)
-        self.tab_abbreviations = QWidget()
-        self._setup_abbreviations_tab(self.tab_abbreviations)
-        self.tabs.addTab(self.tab_abbreviations, "Dictionnaire d'abréviations")
+        # 1.4. Tab: Paramètres (Settings with nested tabs)
+        self.tab_settings = QWidget()
+        self._setup_settings_tab(self.tab_settings)
+        self.tabs.addTab(self.tab_settings, "Paramètres")
+
+
 
         # 2. Output Group
         group_output = QGroupBox("Destination de l'export")
@@ -598,6 +601,23 @@ class MainWindow(QMainWindow):
         if success: QMessageBox.information(self, "Succès", message)
         else: QMessageBox.information(self, "Info", message) if "annulée" in message else QMessageBox.critical(self, "Erreur", message)
 
+    def _setup_settings_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        self.settings_tabs = QTabWidget()
+        layout.addWidget(self.settings_tabs)
+        
+        # Nested Tab 1: Dictionnaire
+        self.tab_abbreviations = QWidget()
+        self._setup_abbreviations_tab(self.tab_abbreviations)
+        self.settings_tabs.addTab(self.tab_abbreviations, "Dictionnaire")
+        
+        # Nested Tab 2: Colonnes
+        self.tab_columns = QWidget()
+        self._setup_columns_tab(self.tab_columns)
+        self.settings_tabs.addTab(self.tab_columns, "Colonnes")
+
     def _setup_abbreviations_tab(self, parent_widget):
         layout = QVBoxLayout(parent_widget)
         layout.setSpacing(10)
@@ -856,6 +876,370 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Erreur", f"Échec de l'importation : {e}")
 
+    def _setup_columns_tab(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
+        layout.setSpacing(10)
+        
+        # 1. Top Search and Action bar (Matching the abbreviations tab UI layout)
+        top_bar = QHBoxLayout()
+        
+        self.column_search = QLineEdit()
+        self.column_search.setPlaceholderText("Rechercher une colonne...")
+        self.column_search.textChanged.connect(self._filter_columns)
+        top_bar.addWidget(self.column_search, stretch=3)
+        
+        btn_add = QPushButton("Ajouter")
+        btn_add.clicked.connect(self._add_column)
+        top_bar.addWidget(btn_add)
+        
+        btn_delete = QPushButton("Supprimer")
+        btn_delete.clicked.connect(self._delete_column)
+        top_bar.addWidget(btn_delete)
+        
+        btn_save = QPushButton("Enregistrer")
+        btn_save.clicked.connect(self._save_columns_config)
+        top_bar.addWidget(btn_save)
+        
+        layout.addLayout(top_bar)
+        
+        # 2. Main Table View
+        self.columns_table = QTableWidget()
+        self.columns_table.setColumnCount(4)
+        self.columns_table.setHorizontalHeaderLabels([
+            "En-tête Excel", 
+            "Type de source", 
+            "Attribut CAO / Code source", 
+            "Valeur par défaut"
+        ])
+        self.columns_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.columns_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.columns_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.columns_table.itemChanged.connect(self._on_columns_table_changed)
+        layout.addWidget(self.columns_table)
+        
+        # 3. Bottom Actions bar (Matching abbreviations layout)
+        bottom_bar = QHBoxLayout()
+        
+        btn_restore = QPushButton("Restaurer défauts")
+        btn_restore.clicked.connect(self._restore_default_columns_config)
+        bottom_bar.addWidget(btn_restore)
+        
+        bottom_bar.addStretch()
+        
+        self.btn_toggle_system = QPushButton("Afficher Système")
+        self.btn_toggle_system.setCheckable(True)
+        self.btn_toggle_system.setChecked(False)
+        self.btn_toggle_system.clicked.connect(self._toggle_system_columns)
+        bottom_bar.addWidget(self.btn_toggle_system)
+        
+        btn_import = QPushButton("Importer la configuration...")
+        btn_import.clicked.connect(self._import_columns_config)
+        bottom_bar.addWidget(btn_import)
+        
+        btn_export = QPushButton("Exporter la configuration...")
+        btn_export.clicked.connect(self._export_columns_config)
+        bottom_bar.addWidget(btn_export)
+        
+        layout.addLayout(bottom_bar)
+        
+        # Load the data
+        self._load_columns_into_table()
+        self.columns_table_changed = False
+
+    def _toggle_system_columns(self):
+        show = self.btn_toggle_system.isChecked()
+        if show:
+            self.btn_toggle_system.setText("Masquer Système")
+        else:
+            self.btn_toggle_system.setText("Afficher Système")
+            
+        self.columns_table.blockSignals(True)
+        self._filter_columns(self.column_search.text())
+        self.columns_table.blockSignals(False)
+
+    def _filter_columns(self, query):
+        query = query.lower().strip()
+        for r in range(self.columns_table.rowCount()):
+            type_item = self.columns_table.item(r, 1)
+            type_text = type_item.text() if type_item else ""
+            is_system = "Champ Spécifique" in type_text
+            
+            should_hide_system = is_system and not self.btn_toggle_system.isChecked()
+            if should_hide_system:
+                self.columns_table.setRowHidden(r, True)
+                continue
+                
+            header_item = self.columns_table.item(r, 0)
+            header = header_item.text().lower() if header_item else ""
+            source_item = self.columns_table.item(r, 2)
+            source = source_item.text().lower() if source_item else ""
+            
+            match = (query in header) or (query in source)
+            self.columns_table.setRowHidden(r, not match)
+
+    def _load_columns_into_table(self):
+        from SE_to_PLM.core.services.export.excel_exporter import excel_exporter
+        self.columns_table.blockSignals(True)
+        self.columns_table.setRowCount(0)
+        
+        self.loaded_columns = excel_exporter.load_columns_config()
+        
+        for idx, col in enumerate(self.loaded_columns):
+            self.columns_table.insertRow(idx)
+            current_type = col.get("source_type", "solid_edge_property")
+            
+            # 0. En-tête Excel (Modifiable)
+            header_item = QTableWidgetItem(col.get("header", ""))
+            self.columns_table.setItem(idx, 0, header_item)
+            
+            # 1. Type de source (Lecture seule)
+            if current_type == "special_processed":
+                type_text = "Champ Spécifique (Système)"
+            else:
+                type_text = "Propriété Solid Edge"
+            type_item = QTableWidgetItem(type_text)
+            type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)
+            self.columns_table.setItem(idx, 1, type_item)
+            
+            # 2. Attribut CAO / Code source
+            source_name = col.get("source_name", "")
+            val_str = source_name
+            if isinstance(val_str, list):
+                val_str = ", ".join(val_str)
+                
+            source_item = QTableWidgetItem(val_str)
+            if current_type == "special_processed":
+                source_item.setFlags(source_item.flags() & ~Qt.ItemIsEditable)
+            self.columns_table.setItem(idx, 2, source_item)
+                
+            # 3. Valeur par défaut
+            default_item = QTableWidgetItem(col.get("default_value", ""))
+            if current_type == "special_processed":
+                default_item.setFlags(default_item.flags() & ~Qt.ItemIsEditable)
+            self.columns_table.setItem(idx, 3, default_item)
+            
+            # Coloration de la ligne pour différencier les colonnes Système (Gris très clair)
+            if current_type == "special_processed":
+                bg_color = QColor(245, 245, 245)
+                for col_idx in range(4):
+                    item = self.columns_table.item(idx, col_idx)
+                    if item:
+                        item.setBackground(bg_color)
+                        if col_idx in [1, 2, 3]:
+                            item.setForeground(QColor(120, 120, 120))
+            else:
+                for col_idx in range(4):
+                    item = self.columns_table.item(idx, col_idx)
+                    if item:
+                        if col_idx == 1:
+                            item.setForeground(QColor(120, 120, 120))
+            
+        self.columns_table.blockSignals(False)
+        self.columns_table_changed = False
+        self._toggle_system_columns()
+
+    def _on_columns_table_changed(self):
+        self.columns_table_changed = True
+
+    def _add_column(self):
+        self.columns_table.blockSignals(True)
+        
+        # mode_appro and attachments must always be the last columns.
+        # So we look for mode_appro first, then attachments.
+        target_row = -1
+        for r in range(self.columns_table.rowCount()):
+            name_item = self.columns_table.item(r, 2)
+            if name_item and name_item.text().strip() == "mode_appro":
+                target_row = r
+                break
+                
+        if target_row == -1:
+            for r in range(self.columns_table.rowCount()):
+                name_item = self.columns_table.item(r, 2)
+                if name_item and name_item.text().strip() == "attachments":
+                    target_row = r
+                    break
+                    
+        if target_row == -1:
+            target_row = self.columns_table.rowCount()
+            
+        self.columns_table.insertRow(target_row)
+        
+        header_item = QTableWidgetItem(f"NouvelleColonne_{target_row + 1}")
+        self.columns_table.setItem(target_row, 0, header_item)
+        
+        type_item = QTableWidgetItem("Propriété Solid Edge")
+        type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)
+        type_item.setForeground(QColor(120, 120, 120))
+        self.columns_table.setItem(target_row, 1, type_item)
+        
+        item = QTableWidgetItem("")
+        self.columns_table.setItem(target_row, 2, item)
+        
+        default_item = QTableWidgetItem("")
+        self.columns_table.setItem(target_row, 3, default_item)
+        
+        self.columns_table.blockSignals(False)
+        self.columns_table.setCurrentCell(target_row, 0)
+        self._on_columns_table_changed()
+
+    def _delete_column(self):
+        row = self.columns_table.currentRow()
+        if row < 0:
+            QMessageBox.warning(self, "Attention", "Veuillez sélectionner une colonne à supprimer.")
+            return
+            
+        type_item = self.columns_table.item(row, 1)
+        type_text = type_item.text() if type_item else ""
+        if "Champ Spécifique" in type_text:
+            QMessageBox.warning(
+                self, 
+                "Action interdite", 
+                "Les colonnes système (champs spécifiques) sont requises par l'application et ne peuvent pas être supprimées."
+            )
+            return
+            
+        header = self.columns_table.item(row, 0).text()
+        reply = QMessageBox.question(
+            self,
+            "Confirmer la suppression",
+            f"Voulez-vous vraiment supprimer la colonne '{header}' ?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.columns_table.removeRow(row)
+            self._on_columns_table_changed()
+
+    def _read_table_to_config(self) -> list:
+        config = []
+        for r in range(self.columns_table.rowCount()):
+            header_item = self.columns_table.item(r, 0)
+            header = header_item.text().strip() if header_item else ""
+            
+            type_item = self.columns_table.item(r, 1)
+            type_text = type_item.text() if type_item else ""
+            if "Champ Spécifique" in type_text:
+                source_type = "special_processed"
+            else:
+                source_type = "solid_edge_property"
+                
+            name_item = self.columns_table.item(r, 2)
+            val_str = name_item.text().strip() if name_item else ""
+            if source_type == "special_processed":
+                source_name = val_str
+            else:
+                if "," in val_str:
+                    source_name = [v.strip() for v in val_str.split(",") if v.strip()]
+                else:
+                    source_name = val_str
+                    
+            def_item = self.columns_table.item(r, 3)
+            default_value = def_item.text().strip() if def_item else ""
+            
+            style = "plm"
+            if hasattr(self, 'loaded_columns'):
+                original_style = None
+                for col in self.loaded_columns:
+                    if col.get("source_name") == source_name:
+                        original_style = col.get("style")
+                        break
+                if original_style:
+                    style = original_style
+                else:
+                    if source_type == "special_processed":
+                        if source_name in ["level", "relationship", "order", "quantity", "repere", "special_cad", "plm_class", "ref_utilisat", "version", "indice_1", "indice_2", "revision", "designation"]:
+                            style = "cad"
+            else:
+                if source_type == "special_processed":
+                    if source_name in ["level", "relationship", "order", "quantity", "repere", "special_cad", "plm_class", "ref_utilisat", "version", "indice_1", "indice_2", "revision", "designation"]:
+                        style = "cad"
+                        
+            config.append({
+                "header": header,
+                "source_type": source_type,
+                "source_name": source_name,
+                "default_value": default_value,
+                "style": style
+            })
+        return config
+
+    def _save_columns_config(self):
+        config = self._read_table_to_config()
+        for r, col in enumerate(config):
+            if not col["header"]:
+                QMessageBox.warning(self, "Erreur", f"L'en-tête de la ligne {r + 1} ne peut pas être vide.")
+                return
+                
+        config_path = Path(__file__).parent.parent / "resources" / "columns_config.json"
+        try:
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            QMessageBox.information(self, "Succès", "Configuration des colonnes enregistrée avec succès.")
+            self.columns_table_changed = False
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Impossible d'enregistrer la configuration : {e}")
+
+    def _import_columns_config(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Importer la configuration", "", "Configuration JSON (*.json)"
+        )
+        if not file_path:
+            return
+            
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                
+            if not isinstance(data, list):
+                raise ValueError("La configuration doit être une liste de colonnes.")
+                
+            for idx, col in enumerate(data):
+                if not isinstance(col, dict) or "header" not in col or "source_type" not in col or "source_name" not in col:
+                    raise ValueError(f"Colonne invalide à l'index {idx + 1}. Doit contenir 'header', 'source_type' et 'source_name'.")
+                    
+            self.loaded_columns = data
+            self._load_columns_into_table()
+            self.columns_table_changed = True
+            QMessageBox.information(self, "Succès", "Configuration importée avec succès. N'oubliez pas d'enregistrer.")
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Échec de l'importation : {e}")
+
+    def _export_columns_config(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Exporter la configuration", "columns_config.json", "Configuration JSON (*.json)"
+        )
+        if not file_path:
+            return
+            
+        try:
+            config = self._read_table_to_config()
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            QMessageBox.information(self, "Succès", f"Configuration exportée avec succès sous :\n{file_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Échec de l'exportation : {e}")
+
+    def _restore_default_columns_config(self):
+        reply = QMessageBox.question(
+            self,
+            "Confirmer la restauration",
+            "Voulez-vous vraiment restaurer la configuration des colonnes par défaut ?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            from SE_to_PLM.core.services.export.excel_exporter import excel_exporter
+            defaults = excel_exporter.get_default_columns_config()
+            config_path = Path(__file__).parent.parent / "resources" / "columns_config.json"
+            try:
+                with open(config_path, "w", encoding="utf-8") as f:
+                    json.dump(defaults, f, indent=2, ensure_ascii=False)
+                self._load_columns_into_table()
+                QMessageBox.information(self, "Succès", "Configuration par défaut restaurée.")
+            except Exception as e:
+                QMessageBox.critical(self, "Erreur", f"Erreur lors de la restauration : {e}")
+
     def closeEvent(self, event):
         if hasattr(self, 'abbrev_table_changed') and self.abbrev_table_changed:
             reply_save = QMessageBox.question(
@@ -869,6 +1253,19 @@ class MainWindow(QMainWindow):
                 return
             elif reply_save == QMessageBox.Yes:
                 self._save_abbreviations()
+
+        if hasattr(self, 'columns_table_changed') and self.columns_table_changed:
+            reply_save = QMessageBox.question(
+                self, "Enregistrer les modifications ?",
+                "Vous avez des modifications non enregistrées dans la configuration des colonnes. Voulez-vous les enregistrer avant de quitter ?",
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes
+            )
+            if reply_save == QMessageBox.Cancel:
+                event.ignore()
+                return
+            elif reply_save == QMessageBox.Yes:
+                self._save_columns_config()
                 
         reply = QMessageBox.question(
             self, 

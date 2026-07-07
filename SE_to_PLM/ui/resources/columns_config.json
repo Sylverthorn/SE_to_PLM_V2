@@ -1,0 +1,163 @@
+[
+  {
+    "header": "Level",
+    "source_type": "special_processed",
+    "source_name": "level",
+    "default_value": "0",
+    "style": "cad"
+  },
+  {
+    "header": "Relationship",
+    "source_type": "special_processed",
+    "source_name": "relationship",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "ordre",
+    "source_type": "special_processed",
+    "source_name": "order",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "quantite",
+    "source_type": "special_processed",
+    "source_name": "quantity",
+    "default_value": "1",
+    "style": "cad"
+  },
+  {
+    "header": "repere",
+    "source_type": "special_processed",
+    "source_name": "repere",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "SpecialCAD",
+    "source_type": "special_processed",
+    "source_name": "special_cad",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "Class",
+    "source_type": "special_processed",
+    "source_name": "plm_class",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "ref_utilisat",
+    "source_type": "special_processed",
+    "source_name": "ref_utilisat",
+    "default_value": "",
+    "style": "cad"
+  },
+  {
+    "header": "version",
+    "source_type": "special_processed",
+    "source_name": "version",
+    "default_value": "-",
+    "style": "cad"
+  },
+  {
+    "header": "indice_1",
+    "source_type": "special_processed",
+    "source_name": "indice_1",
+    "default_value": "-",
+    "style": "cad"
+  },
+  {
+    "header": "indice_2",
+    "source_type": "special_processed",
+    "source_name": "indice_2",
+    "default_value": "-",
+    "style": "cad"
+  },
+  {
+    "header": "revision",
+    "source_type": "special_processed",
+    "source_name": "revision",
+    "default_value": "1",
+    "style": "cad"
+  },
+  {
+    "header": "designation",
+    "source_type": "special_processed",
+    "source_name": "designation",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "designation_erp",
+    "source_type": "special_processed",
+    "source_name": "designation_erp",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "cus_createur",
+    "source_type": "solid_edge_property",
+    "source_name": "auteur",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "cus_date_crea",
+    "source_type": "solid_edge_property",
+    "source_name": "date_creation",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "user_version_1",
+    "source_type": "solid_edge_property",
+    "source_name": "auteur_modif",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "date_version_1",
+    "source_type": "solid_edge_property",
+    "source_name": "date_modif",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "matiere",
+    "source_type": "solid_edge_property",
+    "source_name": "matiere",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "densite",
+    "source_type": "solid_edge_property",
+    "source_name": "densite",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "dia_se",
+    "source_type": "solid_edge_property",
+    "source_name": "dia_se",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "mode_appro",
+    "source_type": "special_processed",
+    "source_name": "mode_appro",
+    "default_value": "",
+    "style": "plm"
+  },
+  {
+    "header": "Attachments",
+    "source_type": "special_processed",
+    "source_name": "attachments",
+    "default_value": "",
+    "style": "plm"
+  }
+]

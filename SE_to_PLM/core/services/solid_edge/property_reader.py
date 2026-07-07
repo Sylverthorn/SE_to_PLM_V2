@@ -84,6 +84,11 @@ class PropertyReader:
         name_lower = name.lower().strip()
         val_str = str(value).strip() if value is not None else ""
 
+        # Enregistrer dans custom_properties
+        if not hasattr(meta, 'custom_properties') or meta.custom_properties is None:
+            meta.custom_properties = {}
+        meta.custom_properties[name_lower] = val_str
+
         # Designation
         if name_lower in ["désignation", "designation", "desig", "title", "titre"]:
             if not meta.designation: meta.designation = val_str
@@ -154,12 +159,19 @@ class PropertyReader:
                         p = custom.Item(nom_champ)
                         val = p.Value
                         if val is not None:
+                            val_str = ""
                             if "date" in cle_meta:
-                                setattr(meta, cle_meta, self.normalize_date(val))
+                                val_str = self.normalize_date(val)
                             elif "densite" in cle_meta:
-                                setattr(meta, cle_meta, self.normalize_density(val))
+                                val_str = self.normalize_density(val)
                             else:
-                                setattr(meta, cle_meta, str(val).strip())
+                                val_str = str(val).strip()
+                            
+                            setattr(meta, cle_meta, val_str)
+                            if meta.custom_properties is None:
+                                meta.custom_properties = {}
+                            meta.custom_properties[cle_meta] = val_str
+                            meta.custom_properties[nom_champ.lower().strip()] = val_str
                     except:
                         pass
             except:
@@ -194,12 +206,19 @@ class PropertyReader:
                             p = p_set.Item(nom_champ)
                             val = p.Value
                             if val is not None:
+                                val_str = ""
                                 if "date" in cle_meta:
-                                    setattr(meta, cle_meta, self.normalize_date(val))
+                                    val_str = self.normalize_date(val)
                                 elif "densite" in cle_meta:
-                                    setattr(meta, cle_meta, self.normalize_density(val))
+                                    val_str = self.normalize_density(val)
                                 else:
-                                    setattr(meta, cle_meta, str(val).strip())
+                                    val_str = str(val).strip()
+                                
+                                setattr(meta, cle_meta, val_str)
+                                if meta.custom_properties is None:
+                                    meta.custom_properties = {}
+                                meta.custom_properties[cle_meta] = val_str
+                                meta.custom_properties[nom_champ.lower().strip()] = val_str
                         except:
                             pass
 

@@ -63,7 +63,8 @@ class GeneratePLMExportUseCase:
             densite=node.metadata.densite,
             dia_se=node.metadata.dia_se,
             mode_appro=assembly_service.get_mode_appro(node.cad_file.full_path_str),
-            attachments=attachments
+            attachments=attachments,
+            custom_properties=node.metadata.custom_properties
         )
         self._order_counter += 1
         return row
@@ -210,7 +211,8 @@ class GeneratePLMExportUseCase:
             densite=source_node.metadata.densite,
             dia_se=source_node.metadata.dia_se,
             mode_appro=assembly_service.get_mode_appro(source_node.cad_file.full_path_str),
-            attachments=(dft_cad.full_path_str + "(DRW)")
+            attachments=(dft_cad.full_path_str + "(DRW)"),
+            custom_properties=dft_meta.custom_properties
         )
         self._order_counter += 1
         rows.append(dft_row)

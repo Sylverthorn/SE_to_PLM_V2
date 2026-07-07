@@ -71,7 +71,8 @@ class BatchExportUseCase:
             densite=metadata.densite,
             dia_se=metadata.dia_se,
             mode_appro=assembly_service.get_mode_appro(cad_file.full_path_str),
-            attachments=attachments
+            attachments=attachments,
+            custom_properties=metadata.custom_properties
         )
         self._order_counter += 1
         return row
@@ -190,7 +191,8 @@ class BatchExportUseCase:
                     densite=meta_piece.densite,
                     dia_se=meta_piece.dia_se,
                     mode_appro=assembly_service.get_mode_appro(file_path),
-                    attachments=(dft_cad.full_path_str + "(DRW)")
+                    attachments=(dft_cad.full_path_str + "(DRW)"),
+                    custom_properties=dft_meta.custom_properties
                 )
                 self._order_counter += 1
                 export_rows.append(dft_row)
