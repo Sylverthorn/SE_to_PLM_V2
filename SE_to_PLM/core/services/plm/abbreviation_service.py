@@ -226,6 +226,9 @@ class AbbreviationService:
 
         texte = re.sub(r"\s+", " ", str(texte)).strip()
 
+        if len(texte) < self.LIMITE_CARACTERES:
+            return texte, False
+
         texte_abrege, abrege = self.appliquer_abreviations_prioritaires(texte)
 
         if len(texte_abrege) <= self.LIMITE_CARACTERES:

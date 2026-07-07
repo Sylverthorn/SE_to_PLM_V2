@@ -468,7 +468,7 @@ def appliquer_abreviations_prioritaires(texte, limite=LIMITE_CARACTERES):
     """
     texte = nettoyer_espaces(texte)
 
-    if len(texte) <= limite:
+    if len(texte) < limite:
         return texte, False
 
     texte_modifie = texte
@@ -587,7 +587,7 @@ def optimiser_designation(texte):
     """
     texte = nettoyer_espaces(texte)
 
-    if len(texte) <= LIMITE_CARACTERES:
+    if len(texte) < LIMITE_CARACTERES:
         return texte, False
 
     texte_abrege, abrege = appliquer_abreviations_prioritaires(texte)
@@ -638,13 +638,16 @@ def traiter_fichier_excel(fichier_source, fichier_sortie=None):
 
         ancienne_valeur = cell.value
         nouvelle_valeur, modifie = optimiser_designation(ancienne_valeur)
+        valeur_finale = majuscules_sans_accents(nouvelle_valeur)
 
-        if modifie and nouvelle_valeur != ancienne_valeur:
-            cell.value = majuscules_sans_accents(nouvelle_valeur)
+        if valeur_finale != ancienne_valeur:
+            cell.value = valeur_finale
             nb_modifications += 1
 
-            for col in range(1, ws.max_column + 1):
-                ws.cell(row=row, column=col).fill = rouge
+            # On ne colorie en rouge que si la designation a reellement subi une abreviation/tronquage
+            if modifie and nouvelle_valeur != ancienne_valeur:
+                for col in range(1, ws.max_column + 1):
+                    ws.cell(row=row, column=col).fill = rouge
 
     wb.save(fichier_sortie)
 

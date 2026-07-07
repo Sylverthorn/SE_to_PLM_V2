@@ -69,8 +69,7 @@ def test_excel_generation(tmp_path):
         # Original designation must remain unchanged in the designation column (col 13)
         assert ws_opt.cell(row=3, column=13).value == "Simple Part with a very long designation name that exceeds 32 characters"
         # designation_erp (col 14) must contain the optimized value (uppercase, sans accent, abbreviated and truncated)
-        # Note: "Part" is a protected word, so it preserves "SMP Part" and drops the rest.
-        assert ws_opt.cell(row=3, column=14).value == "SMP PART"
+        assert ws_opt.cell(row=3, column=14).value == "SMP PART WITH A VERY LONG"
         
         # Let's also check row 2 (short designation "Top Assy" under 32 chars)
         # Original designation remains unchanged

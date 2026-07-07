@@ -90,13 +90,13 @@ class ExcelExporter:
             row_was_modified = False
             
             # Extract designation value
-            orig_designation = row_obj.special_values.get("designation", "")
+            orig_designation = row_obj.designation
             
             optimized_erp = orig_designation
             if optimize_designations and isinstance(orig_designation, str):
                 optimized, modified = abbreviation_service.optimiser_designation(orig_designation)
                 optimized_erp = abbreviation_service.majuscules_sans_accents(optimized)
-                if optimized_erp != orig_designation:
+                if modified and optimized != orig_designation:
                     row_was_modified = True
                     
             for col_idx, col in enumerate(columns_config, 1):
