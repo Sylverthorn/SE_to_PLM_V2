@@ -468,7 +468,7 @@ def appliquer_abreviations_prioritaires(texte, limite=LIMITE_CARACTERES):
     """
     texte = nettoyer_espaces(texte)
 
-    if len(texte) < limite:
+    if len(texte) <= limite:
         return texte, False
 
     texte_modifie = texte
@@ -587,7 +587,7 @@ def optimiser_designation(texte):
     """
     texte = nettoyer_espaces(texte)
 
-    if len(texte) < LIMITE_CARACTERES:
+    if len(texte) <= LIMITE_CARACTERES:
         return texte, False
 
     texte_abrege, abrege = appliquer_abreviations_prioritaires(texte)

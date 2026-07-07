@@ -50,8 +50,16 @@ def test_optimiser_designation_short_with_abbrev(temp_abbrev_service):
 
 def test_optimiser_designation_exactly_32_with_abbrev(temp_abbrev_service):
     service = temp_abbrev_service
-    # Texte de 32 caractères exacts, doit être abrégé
+    # Texte de 32 caractères exacts, ne doit PAS être abrégé
     texte = "Moteur de la boucheuse principal"  # 32 caractères
+    opt, modified = service.optimiser_designation(texte)
+    assert not modified
+    assert opt == "Moteur de la boucheuse principal"
+
+def test_optimiser_designation_strictly_greater_than_32_with_abbrev(temp_abbrev_service):
+    service = temp_abbrev_service
+    # Texte de 33 caractères, doit être abrégé
+    texte = "Moteur de la boucheuse principale"  # 33 caractères
     opt, modified = service.optimiser_designation(texte)
     assert modified
     assert "MOT" in opt
