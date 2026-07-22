@@ -441,7 +441,8 @@ class MainWindow(QMainWindow):
             self.multi_chunk_slider.setValue(0)
 
     def _load_style(self):
-        style_path = Path(__file__).parent.parent / "styles" / "style.qss"
+        from SE_to_PLM.app.paths import get_style_path
+        style_path = get_style_path()
         if style_path.exists():
             with open(style_path, "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
@@ -1171,7 +1172,8 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Erreur", f"L'en-tête de la ligne {r + 1} ne peut pas être vide.")
                 return
                 
-        config_path = Path(__file__).parent.parent / "resources" / "columns_config.json"
+        from SE_to_PLM.app.paths import get_writable_config_path
+        config_path = get_writable_config_path("columns_config.json")
         try:
             with open(config_path, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
@@ -1231,7 +1233,8 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.Yes:
             from SE_to_PLM.core.services.export.excel_exporter import excel_exporter
             defaults = excel_exporter.get_default_columns_config()
-            config_path = Path(__file__).parent.parent / "resources" / "columns_config.json"
+            from SE_to_PLM.app.paths import get_writable_config_path
+            config_path = get_writable_config_path("columns_config.json")
             try:
                 with open(config_path, "w", encoding="utf-8") as f:
                     json.dump(defaults, f, indent=2, ensure_ascii=False)

@@ -1,0 +1,13 @@
+# Environnement virtuel
+venv/
+
+# Fichiers compilés Python
+__pycache__/
+*.pyc
+
+# Cache des tests
+.pytest_cache/
+
+# Dossiers générés par PyInstaller
+build/
+dist/

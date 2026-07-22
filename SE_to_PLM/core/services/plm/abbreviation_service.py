@@ -16,8 +16,8 @@ class AbbreviationService:
     MOTS_A_PRESERVER = ["VINOLOK", "EMF", "GALAXY", "NEO"]
 
     def __init__(self):
-        self.resources_dir = Path(__file__).parent.parent.parent.parent / "ui" / "resources"
-        self.json_path = self.resources_dir / "abbreviations.json"
+        from SE_to_PLM.app.paths import get_writable_config_path
+        self.json_path = get_writable_config_path("abbreviations.json")
         self.abbreviations: List[dict] = []
         self.compiled_rules = []
         self.load_abbreviations()
@@ -52,7 +52,7 @@ class AbbreviationService:
         """Enregistre les abréviations dans le fichier JSON et recharge les règles."""
         try:
             # S'assurer que le dossier existe
-            self.resources_dir.mkdir(parents=True, exist_ok=True)
+            self.json_path.parent.mkdir(parents=True, exist_ok=True)
             
             with open(self.json_path, "w", encoding="utf-8") as f:
                 json.dump(abbreviations, f, ensure_ascii=False, indent=2)

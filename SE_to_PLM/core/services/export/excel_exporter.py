@@ -17,7 +17,8 @@ class ExcelExporter:
 
     def load_columns_config(self) -> List[dict]:
         """Loads column configuration from JSON file or returns default."""
-        config_path = Path(__file__).parent.parent.parent.parent / "ui" / "resources" / "columns_config.json"
+        from SE_to_PLM.app.paths import get_writable_config_path
+        config_path = get_writable_config_path("columns_config.json")
         if config_path.exists():
             try:
                 with open(config_path, "r", encoding="utf-8") as f:

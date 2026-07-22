@@ -11,11 +11,12 @@ def bootstrap():
     if not DEFAULT_EXPORT_DIR.exists():
         DEFAULT_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         
+    from SE_to_PLM.app.paths import get_writable_config_path
+    
     # Initialisation du dictionnaire d'abréviations
-    resources_dir = Path(__file__).parent.parent / "ui" / "resources"
-    json_path = resources_dir / "abbreviations.json"
+    json_path = get_writable_config_path("abbreviations.json")
     if not json_path.exists():
-        resources_dir.mkdir(parents=True, exist_ok=True)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             # Recherche du script à la racine
             root_dir = Path(__file__).parent.parent.parent
