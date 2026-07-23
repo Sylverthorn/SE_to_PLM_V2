@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
         
         self._setup_ui()
         self._load_style()
+        self._load_user_settings()
 
     def _setup_ui(self):
         central_widget = QWidget()
@@ -1270,6 +1271,8 @@ class MainWindow(QMainWindow):
             elif reply_save == QMessageBox.Yes:
                 self._save_columns_config()
                 
+        self._save_user_settings()
+
         reply = QMessageBox.question(
             self, 
             "Quitter l'application", 
@@ -1285,6 +1288,70 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.accept()
+
+    def _save_user_settings(self):
+        from SE_to_PLM.app.paths import get_writable_config_path
+        settings_path = get_writable_config_path("user_settings.json")
+        try:
+            settings = {
+                "output_name": self.output_name_edit.text() if hasattr(self, 'output_name_edit') else "",
+                "cb_apply_abbreviation": self.cb_apply_abbreviation.isChecked() if hasattr(self, 'cb_apply_abbreviation') else True,
+                "cb_highlight_abbreviation": self.cb_highlight_abbreviation.isChecked() if hasattr(self, 'cb_highlight_abbreviation') else True,
+                "input_file": self.input_edit.text() if hasattr(self, 'input_edit') else "",
+                "asm_mode": self.asm_mode_combo.currentIndex() if hasattr(self, 'asm_mode_combo') else 0,
+                "asm_dft": self.asm_dft_edit.text() if hasattr(self, 'asm_dft_edit') else "",
+                "batch_dir": self.batch_dir_edit.text() if hasattr(self, 'batch_dir_edit') else "",
+                "cb_recursive": self.cb_recursive.isChecked() if hasattr(self, 'cb_recursive') else False,
+                "batch_mode": self.batch_mode_combo.currentIndex() if hasattr(self, 'batch_mode_combo') else 0,
+                "batch_dft": self.batch_dft_edit.text() if hasattr(self, 'batch_dft_edit') else "",
+                "multi_dir": self.multi_dir_edit.text() if hasattr(self, 'multi_dir_edit') else "",
+                "multi_mode": self.multi_mode_combo.currentIndex() if hasattr(self, 'multi_mode_combo') else 0,
+                "multi_dft": self.multi_dft_edit.text() if hasattr(self, 'multi_dft_edit') else "",
+                "current_tab": self.tabs.currentIndex() if hasattr(self, 'tabs') else 0
+            }
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"Erreur lors de la sauvegarde des paramètres utilisateur : {e}")
+
+    def _load_user_settings(self):
+        from SE_to_PLM.app.paths import get_writable_config_path
+        settings_path = get_writable_config_path("user_settings.json")
+        if not settings_path.exists():
+            return
+        try:
+            with open(settings_path, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+            if "output_name" in settings and settings["output_name"]:
+                self.output_name_edit.setText(settings["output_name"])
+            if "cb_apply_abbreviation" in settings:
+                self.cb_apply_abbreviation.setChecked(bool(settings["cb_apply_abbreviation"]))
+            if "cb_highlight_abbreviation" in settings:
+                self.cb_highlight_abbreviation.setChecked(bool(settings["cb_highlight_abbreviation"]))
+            if "input_file" in settings and hasattr(self, 'input_edit'):
+                self.input_edit.setText(settings["input_file"])
+            if "asm_mode" in settings and hasattr(self, 'asm_mode_combo'):
+                self.asm_mode_combo.setCurrentIndex(settings["asm_mode"])
+            if "asm_dft" in settings and hasattr(self, 'asm_dft_edit'):
+                self.asm_dft_edit.setText(settings["asm_dft"])
+            if "batch_dir" in settings and hasattr(self, 'batch_dir_edit'):
+                self.batch_dir_edit.setText(settings["batch_dir"])
+            if "cb_recursive" in settings and hasattr(self, 'cb_recursive'):
+                self.cb_recursive.setChecked(bool(settings["cb_recursive"]))
+            if "batch_mode" in settings and hasattr(self, 'batch_mode_combo'):
+                self.batch_mode_combo.setCurrentIndex(settings["batch_mode"])
+            if "batch_dft" in settings and hasattr(self, 'batch_dft_edit'):
+                self.batch_dft_edit.setText(settings["batch_dft"])
+            if "multi_dir" in settings and hasattr(self, 'multi_dir_edit'):
+                self.multi_dir_edit.setText(settings["multi_dir"])
+            if "multi_mode" in settings and hasattr(self, 'multi_mode_combo'):
+                self.multi_mode_combo.setCurrentIndex(settings["multi_mode"])
+            if "multi_dft" in settings and hasattr(self, 'multi_dft_edit'):
+                self.multi_dft_edit.setText(settings["multi_dft"])
+            if "current_tab" in settings and hasattr(self, 'tabs'):
+                self.tabs.setCurrentIndex(settings["current_tab"])
+        except Exception as e:
+            logger.error(f"Erreur lors du chargement des paramètres utilisateur : {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
